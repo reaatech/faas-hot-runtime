@@ -1,0 +1,47 @@
+name: hello-world
+description: Simple greeting function that returns a personalized message
+version: 1.0.0
+
+container:
+  image: faas-hot-runtime/hello-world:latest
+  port: 8080
+  resources:
+    cpu: 100m
+    memory: 128Mi
+    gpu: 0
+
+pool:
+  min_size: 2
+  max_size: 10
+  target_utilization: 0.7
+  warm_up_time_seconds: 30
+
+triggers:
+  - type: http
+    path: /hello
+    methods: [GET, POST]
+    auth_required: false
+
+mcp:
+  enabled: true
+  tool_name: hello_world
+  description: Generate a greeting message for the given name
+  input_schema:
+    type: object
+    properties:
+      name:
+        type: string
+        description: Name to greet
+    required:
+      - name
+
+cost:
+  budget_daily: 10.0
+  cost_per_invocation_estimate: 0.0001
+  alert_thresholds: [0.5, 0.75, 0.9]
+  hard_limit: false
+
+observability:
+  tracing_enabled: true
+  metrics_enabled: true
+  log_level: info
