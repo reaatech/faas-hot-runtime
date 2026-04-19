@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  faas-hot-runtime:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+      - MCP_PORT=8080
+      - MCP_HOST=0.0.0.0
+      - API_KEY=dev-api-key
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+    volumes:
+      - ./config:/app/config
+    depends_on:
+      - otel-collector
+    networks:
+      - faas-network
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./config/otel-collector-config.yaml:/etc/otel/config.yaml
+    networks:
+      - faas-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+    networks:
+      - faas-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yaml:/etc/prometheus/prometheus.yml
+    networks:
+      - faas-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - faas-network
+
+networks:
+  faas-network:
+    driver: bridge
