@@ -64,7 +64,9 @@ export class ResourceManager {
     }
 
     try {
-      const { body } = await this.kubeClient.listNamespacedResourceQuota(this.config.namespace);
+      const body = await this.kubeClient.listNamespacedResourceQuota({
+        namespace: this.config.namespace,
+      });
 
       const quota: ResourceQuota = {
         cpu: { used: 0, limit: 0, request: 0 },
@@ -76,19 +78,24 @@ export class ResourceManager {
       for (const item of body.items || []) {
         if (item.status?.hard) {
           quota.cpu.limit = this.parseQuantity(item.status.hard.cpu as string) || quota.cpu.limit;
-          quota.memory.limit = this.parseQuantity(item.status.hard.memory as string) || quota.memory.limit;
+          quota.memory.limit =
+            this.parseQuantity(item.status.hard.memory as string) || quota.memory.limit;
           quota.pods.limit = parseInt(item.status.hard.pods as string, 10) || quota.pods.limit;
         }
         if (item.status?.used) {
           quota.cpu.used = this.parseQuantity(item.status.used.cpu as string) || quota.cpu.used;
-          quota.memory.used = this.parseQuantity(item.status.used.memory as string) || quota.memory.used;
+          quota.memory.used =
+            this.parseQuantity(item.status.used.memory as string) || quota.memory.used;
           quota.pods.used = parseInt(item.status.used.pods as string, 10) || quota.pods.used;
         }
       }
 
       return quota;
     } catch (error) {
-      logger.error({ error: error instanceof Error ? error.message : error }, 'Failed to check resource quotas');
+      logger.error(
+        { error: error instanceof Error ? error.message : error },
+        'Failed to check resource quotas',
+      );
       throw error;
     }
   }
@@ -99,7 +106,7 @@ export class ResourceManager {
     }
 
     try {
-      const { body } = await this.kubeClient.listNode();
+      const body = await this.kubeClient.listNode();
       const nodes: NodeResources[] = [];
 
       for (const node of body.items || []) {
@@ -107,9 +114,13 @@ export class ResourceManager {
         const memory = this.parseQuantity(node.status?.capacity?.memory as string) || 0;
         const gpu = parseInt(node.status?.capacity?.['nvidia.com/gpu'] as string, 10) || 0;
 
-        const allocatableCpu = node.status?.allocatable?.cpu ? this.parseQuantity(node.status.allocatable.cpu) : cpu;
-        const allocatableMemory = this.parseQuantity(node.status?.allocatable?.memory as string) || memory;
-        const allocatableGpu = parseInt(node.status?.allocatable?.['nvidia.com/gpu'] as string, 10) || gpu;
+        const allocatableCpu = node.status?.allocatable?.cpu
+          ? this.parseQuantity(node.status.allocatable.cpu)
+          : cpu;
+        const allocatableMemory =
+          this.parseQuantity(node.status?.allocatable?.memory as string) || memory;
+        const allocatableGpu =
+          parseInt(node.status?.allocatable?.['nvidia.com/gpu'] as string, 10) || gpu;
 
         nodes.push({
           cpu: { capacity: cpu, allocatable: allocatableCpu },
@@ -121,12 +132,19 @@ export class ResourceManager {
 
       return nodes;
     } catch (error) {
-      logger.error({ error: error instanceof Error ? error.message : error }, 'Failed to get node resources');
+      logger.error(
+        { error: error instanceof Error ? error.message : error },
+        'Failed to get node resources',
+      );
       throw error;
     }
   }
 
-  async canAllocateResources(requestedCPU: string, requestedMemory: string, requestedGPU?: number): Promise<boolean> {
+  async canAllocateResources(
+    requestedCPU: string,
+    requestedMemory: string,
+    requestedGPU?: number,
+  ): Promise<boolean> {
     const cpu = this.parseQuantity(requestedCPU);
     const memory = this.parseQuantity(requestedMemory);
 
@@ -139,7 +157,11 @@ export class ResourceManager {
     return cpuAvailable && memoryAvailable && gpuAvailable;
   }
 
-  recommendResources(historicalCPU: string, historicalMemory: string, _avgDurationMs: number): ResourceRecommendation {
+  recommendResources(
+    historicalCPU: string,
+    historicalMemory: string,
+    _avgDurationMs: number,
+  ): ResourceRecommendation {
     const cpu = this.parseQuantity(historicalCPU);
     const memory = this.parseQuantity(historicalMemory);
 
@@ -183,7 +205,12 @@ export class ResourceManager {
     };
   }
 
-  async createResourceQuota(name: string, cpuLimit: string, memoryLimit: string, podsLimit: number): Promise<void> {
+  async createResourceQuota(
+    name: string,
+    cpuLimit: string,
+    memoryLimit: string,
+    podsLimit: number,
+  ): Promise<void> {
     if (!this.kubeClient) {
       throw new Error('Resource manager not initialized');
     }
@@ -199,21 +226,27 @@ export class ResourceManager {
           'limits.memory': memoryLimit,
           'requests.cpu': cpuLimit,
           'requests.memory': memoryLimit,
-          'pods': podsLimit.toString(),
+          pods: podsLimit.toString(),
         },
       },
     };
 
     try {
-      await this.kubeClient.createNamespacedResourceQuota(this.config.namespace, quota);
+      await this.kubeClient.createNamespacedResourceQuota({
+        namespace: this.config.namespace,
+        body: quota,
+      });
       logger.info({ name, cpuLimit, memoryLimit, podsLimit }, 'Resource quota created');
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 409) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 409) {
         logger.warn({ name }, 'Resource quota already exists');
         return;
       }
-      logger.error({ error: error instanceof Error ? error.message : error }, 'Failed to create resource quota');
+      logger.error(
+        { error: error instanceof Error ? error.message : error },
+        'Failed to create resource quota',
+      );
       throw error;
     }
   }
@@ -224,15 +257,21 @@ export class ResourceManager {
     }
 
     try {
-      await this.kubeClient.deleteNamespacedResourceQuota(name, this.config.namespace);
+      await this.kubeClient.deleteNamespacedResourceQuota({
+        name,
+        namespace: this.config.namespace,
+      });
       logger.info({ name }, 'Resource quota deleted');
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 404) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 404) {
         logger.warn({ name }, 'Resource quota not found');
         return;
       }
-      logger.error({ error: error instanceof Error ? error.message : error }, 'Failed to delete resource quota');
+      logger.error(
+        { error: error instanceof Error ? error.message : error },
+        'Failed to delete resource quota',
+      );
       throw error;
     }
   }

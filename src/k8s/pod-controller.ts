@@ -51,10 +51,16 @@ export class PodController {
     this.kubeClient = this.kc.makeApiClient(k8s.CoreV1Api);
 
     try {
-      await this.kubeClient.listNamespacedPod(this.config.namespace, undefined, undefined, undefined, undefined, undefined, 1);
+      await this.kubeClient.listNamespacedPod({
+        namespace: this.config.namespace,
+        limit: 1,
+      });
       logger.info('Pod controller initialized');
     } catch (error) {
-      logger.error({ error: error instanceof Error ? error.message : error }, 'Failed to connect to Kubernetes');
+      logger.error(
+        { error: error instanceof Error ? error.message : error },
+        'Failed to connect to Kubernetes',
+      );
       throw error;
     }
   }
@@ -66,7 +72,10 @@ export class PodController {
 
     const name = podName ?? `${functionDef.name}-pod-${crypto.randomUUID().substring(0, 8)}`;
 
-    logger.info({ pod: name, function: functionDef.name, image: functionDef.container.image }, 'Creating pod');
+    logger.info(
+      { pod: name, function: functionDef.name, image: functionDef.container.image },
+      'Creating pod',
+    );
 
     const podManifest: k8s.V1Pod = {
       metadata: {
@@ -127,16 +136,24 @@ export class PodController {
 
     if (functionDef.container.resources.gpu && functionDef.container.resources.gpu > 0) {
       const container = podManifest.spec!.containers[0];
-      container.resources!.limits!['nvidia.com/gpu'] = functionDef.container.resources.gpu.toString();
-      container.resources!.requests!['nvidia.com/gpu'] = functionDef.container.resources.gpu.toString();
+      container.resources!.limits!['nvidia.com/gpu'] =
+        functionDef.container.resources.gpu.toString();
+      container.resources!.requests!['nvidia.com/gpu'] =
+        functionDef.container.resources.gpu.toString();
     }
 
     try {
-      await this.kubeClient.createNamespacedPod(this.config.namespace, podManifest);
+      await this.kubeClient.createNamespacedPod({
+        namespace: this.config.namespace,
+        body: podManifest,
+      });
       logger.info({ pod: name }, 'Pod created successfully');
       return name;
     } catch (error) {
-      logger.error({ pod: name, error: error instanceof Error ? error.message : error }, 'Failed to create pod');
+      logger.error(
+        { pod: name, error: error instanceof Error ? error.message : error },
+        'Failed to create pod',
+      );
       throw error;
     }
   }
@@ -152,24 +169,24 @@ export class PodController {
       const gracePeriodSeconds = graceful ? this.config.defaultGracePeriodSeconds : 0;
       const propagationPolicy = graceful ? 'Foreground' : 'Background';
 
-      await this.kubeClient.deleteNamespacedPod(
-        podName,
-        this.config.namespace,
-        undefined,
-        undefined,
+      await this.kubeClient.deleteNamespacedPod({
+        name: podName,
+        namespace: this.config.namespace,
         gracePeriodSeconds,
-        undefined,
         propagationPolicy,
-      );
+      });
 
       logger.info({ pod: podName }, 'Pod deletion initiated');
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 404) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 404) {
         logger.warn({ pod: podName }, 'Pod not found');
         return;
       }
-      logger.error({ pod: podName, error: error instanceof Error ? error.message : error }, 'Failed to delete pod');
+      logger.error(
+        { pod: podName, error: error instanceof Error ? error.message : error },
+        'Failed to delete pod',
+      );
       throw error;
     }
   }
@@ -177,7 +194,7 @@ export class PodController {
   async updatePod(podName: string, _updates: Partial<k8s.V1Pod>): Promise<void> {
     throw new Error(
       `Cannot update pod '${podName}': pod specs are immutable in Kubernetes. ` +
-      `Delete the pod and recreate it with the desired configuration.`,
+        `Delete the pod and recreate it with the desired configuration.`,
     );
   }
 
@@ -193,8 +210,13 @@ export class PodController {
     }
 
     try {
-      const { body: pod } = await this.kubeClient.readNamespacedPodStatus(podName, this.config.namespace);
-      const readyCondition = (pod.status?.conditions || []).find((c: k8s.V1PodCondition) => c.type === 'Ready');
+      const pod = await this.kubeClient.readNamespacedPodStatus({
+        name: podName,
+        namespace: this.config.namespace,
+      });
+      const readyCondition = (pod.status?.conditions || []).find(
+        (c: k8s.V1PodCondition) => c.type === 'Ready',
+      );
 
       return {
         phase: pod.status?.phase || 'Unknown',
@@ -204,11 +226,14 @@ export class PodController {
         startTime: pod.status?.startTime ? new Date(pod.status.startTime) : undefined,
       };
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 404) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 404) {
         return null;
       }
-      logger.error({ pod: podName, error: error instanceof Error ? error.message : error }, 'Failed to get pod status');
+      logger.error(
+        { pod: podName, error: error instanceof Error ? error.message : error },
+        'Failed to get pod status',
+      );
       throw error;
     }
   }
@@ -237,21 +262,22 @@ export class PodController {
       throw new Error('Pod controller not initialized');
     }
 
-    const labelSelector = functionName ? `faas-hot-runtime/function=${functionName}` : 'faas-hot-runtime/function';
+    const labelSelector = functionName
+      ? `faas-hot-runtime/function=${functionName}`
+      : 'faas-hot-runtime/function';
 
     try {
-      const { body } = await this.kubeClient.listNamespacedPod(
-        this.config.namespace,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
+      const body = await this.kubeClient.listNamespacedPod({
+        namespace: this.config.namespace,
         labelSelector,
-      );
+      });
 
       return (body.items || []).map((pod) => pod.metadata?.name || '').filter(Boolean);
     } catch (error) {
-      logger.error({ error: error instanceof Error ? error.message : error }, 'Failed to list pods');
+      logger.error(
+        { error: error instanceof Error ? error.message : error },
+        'Failed to list pods',
+      );
       throw error;
     }
   }
@@ -265,7 +291,9 @@ export class PodController {
       this.eventCallbacks.push(callback);
     }
 
-    const labelSelector = functionName ? `faas-hot-runtime/function=${functionName}` : 'faas-hot-runtime/function';
+    const labelSelector = functionName
+      ? `faas-hot-runtime/function=${functionName}`
+      : 'faas-hot-runtime/function';
 
     const watch = new k8s.Watch(this.kc);
 
@@ -290,7 +318,10 @@ export class PodController {
           try {
             cb(event);
           } catch (error) {
-            logger.error({ error: error instanceof Error ? error.message : error }, 'Pod event callback failed');
+            logger.error(
+              { error: error instanceof Error ? error.message : error },
+              'Pod event callback failed',
+            );
           }
         }
       },

@@ -71,7 +71,10 @@ export class K8sClient {
 
     // Verify cluster connectivity
     try {
-      await this.kubeClient.listNamespacedPod(this.config.namespace, undefined, undefined, undefined, undefined, undefined, 1);
+      await this.kubeClient.listNamespacedPod({
+        namespace: this.config.namespace,
+        limit: 1,
+      });
       logger.info('Kubernetes cluster connectivity verified');
     } catch (error) {
       logger.error(
@@ -165,7 +168,10 @@ export class K8sClient {
     }
 
     try {
-      await this.kubeClient.createNamespacedPod(this.config.namespace, podManifest);
+      await this.kubeClient.createNamespacedPod({
+        namespace: this.config.namespace,
+        body: podManifest,
+      });
 
       logger.info({ pod: spec.name }, 'Pod created successfully');
 
@@ -197,20 +203,17 @@ export class K8sClient {
       const gracePeriodSeconds = graceful ? 30 : 0;
       const propagationPolicy = graceful ? 'Foreground' : 'Background';
 
-      await this.kubeClient.deleteNamespacedPod(
-        podName,
-        this.config.namespace,
-        undefined, // pretty
-        undefined, // dryRun
+      await this.kubeClient.deleteNamespacedPod({
+        name: podName,
+        namespace: this.config.namespace,
         gracePeriodSeconds,
-        undefined, // orphanDependents
         propagationPolicy,
-      );
+      });
 
       logger.info({ pod: podName }, 'Pod deletion initiated');
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 404) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 404) {
         logger.warn({ pod: podName }, 'Pod not found, already deleted');
         return;
       }
@@ -231,7 +234,10 @@ export class K8sClient {
     }
 
     try {
-      const { body: pod } = await this.kubeClient.readNamespacedPodStatus(podName, this.config.namespace);
+      const pod = await this.kubeClient.readNamespacedPodStatus({
+        name: podName,
+        namespace: this.config.namespace,
+      });
 
       const conditions = pod.status?.conditions || [];
       const readyCondition = conditions.find((c: k8s.V1PodCondition) => c.type === 'Ready');
@@ -245,8 +251,8 @@ export class K8sClient {
         ready: readyCondition?.status === 'True',
       };
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 404) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 404) {
         return undefined;
       }
       logger.error(
@@ -266,14 +272,10 @@ export class K8sClient {
     }
 
     try {
-      const { body: podList } = await this.kubeClient.listNamespacedPod(
-        this.config.namespace,
-        undefined,
-        undefined,
-        undefined,
+      const podList = await this.kubeClient.listNamespacedPod({
+        namespace: this.config.namespace,
         labelSelector,
-        undefined,
-      );
+      });
 
       return (podList.items || []).map((pod) => {
         const conditions = pod.status?.conditions || [];
@@ -306,25 +308,17 @@ export class K8sClient {
     }
 
     try {
-      const { body } = await this.kubeClient.readNamespacedPodLog(
-        podName,
-        this.config.namespace,
-        undefined,
-        undefined,
+      const body = await this.kubeClient.readNamespacedPodLog({
+        name: podName,
+        namespace: this.config.namespace,
         follow,
-        tail,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-      );
+        tailLines: tail,
+      });
 
       return body as string;
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 404) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 404) {
         return '';
       }
       logger.error(
@@ -338,11 +332,7 @@ export class K8sClient {
   /**
    * Create a Kubernetes service for a function
    */
-  async createService(
-    name: string,
-    port: number,
-    selector: Record<string, string>,
-  ): Promise<void> {
+  async createService(name: string, port: number, selector: Record<string, string>): Promise<void> {
     if (!this.kubeClient) {
       throw new Error('Kubernetes client not initialized');
     }
@@ -374,12 +364,15 @@ export class K8sClient {
     };
 
     try {
-      await this.kubeClient.createNamespacedService(this.config.namespace, serviceManifest);
+      await this.kubeClient.createNamespacedService({
+        namespace: this.config.namespace,
+        body: serviceManifest,
+      });
 
       logger.info({ service: name }, 'Service created successfully');
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 409) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 409) {
         logger.warn({ service: name }, 'Service already exists');
         return;
       }
@@ -402,12 +395,12 @@ export class K8sClient {
     logger.info({ service: name }, 'Deleting service');
 
     try {
-      await this.kubeClient.deleteNamespacedService(name, this.config.namespace);
+      await this.kubeClient.deleteNamespacedService({ name, namespace: this.config.namespace });
 
       logger.info({ service: name }, 'Service deleted successfully');
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 404) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 404) {
         logger.warn({ service: name }, 'Service not found, already deleted');
         return;
       }
@@ -432,7 +425,9 @@ export class K8sClient {
     }
 
     try {
-      const { body } = await this.kubeClient.listNamespacedResourceQuota(this.config.namespace);
+      const body = await this.kubeClient.listNamespacedResourceQuota({
+        namespace: this.config.namespace,
+      });
 
       let cpuUsed = 0;
       let cpuLimit = 0;
@@ -527,10 +522,10 @@ export class K8sClient {
     }
 
     try {
-      const { body: versionResponse } = await this.kc.makeApiClient(k8s.VersionApi).getCode();
+      const versionResponse = await this.kc.makeApiClient(k8s.VersionApi).getCode();
       const version = versionResponse.gitVersion || 'unknown';
 
-      const { body: nodesResponse } = await this.kubeClient.listNode();
+      const nodesResponse = await this.kubeClient.listNode();
       const nodeCount = nodesResponse.items?.length || 0;
 
       // Detect platform

@@ -95,7 +95,10 @@ export class NetworkManager {
     };
 
     try {
-      await this.kubeClient.createNamespacedService(this.config.namespace, serviceManifest);
+      await this.kubeClient.createNamespacedService({
+        namespace: this.config.namespace,
+        body: serviceManifest,
+      });
 
       const endpoint: ServiceEndpoint = {
         name,
@@ -108,14 +111,17 @@ export class NetworkManager {
       logger.info({ service: name }, 'Service created successfully');
       return endpoint;
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 409) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 409) {
         logger.warn({ service: name }, 'Service already exists');
         const existing = await this.getService(name);
         if (existing) return existing;
         throw error;
       }
-      logger.error({ service: name, error: error instanceof Error ? error.message : error }, 'Failed to create service');
+      logger.error(
+        { service: name, error: error instanceof Error ? error.message : error },
+        'Failed to create service',
+      );
       throw error;
     }
   }
@@ -126,21 +132,27 @@ export class NetworkManager {
     }
 
     try {
-      const { body } = await this.kubeClient.readNamespacedService(name, this.config.namespace);
+      const body = await this.kubeClient.readNamespacedService({
+        name,
+        namespace: this.config.namespace,
+      });
 
       return {
         name,
         clusterIP: body.spec?.clusterIP || '',
         port: body.spec?.ports?.[0]?.port || 0,
-        targetPort: body.spec?.ports?.[0]?.targetPort as number || 0,
+        targetPort: (body.spec?.ports?.[0]?.targetPort as number) || 0,
         protocol: body.spec?.ports?.[0]?.protocol || 'TCP',
       };
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 404) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 404) {
         return null;
       }
-      logger.error({ service: name, error: error instanceof Error ? error.message : error }, 'Failed to get service');
+      logger.error(
+        { service: name, error: error instanceof Error ? error.message : error },
+        'Failed to get service',
+      );
       throw error;
     }
   }
@@ -153,15 +165,18 @@ export class NetworkManager {
     logger.info({ service: name }, 'Deleting service');
 
     try {
-      await this.kubeClient.deleteNamespacedService(name, this.config.namespace);
+      await this.kubeClient.deleteNamespacedService({ name, namespace: this.config.namespace });
       logger.info({ service: name }, 'Service deleted successfully');
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 404) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 404) {
         logger.warn({ service: name }, 'Service not found');
         return;
       }
-      logger.error({ service: name, error: error instanceof Error ? error.message : error }, 'Failed to delete service');
+      logger.error(
+        { service: name, error: error instanceof Error ? error.message : error },
+        'Failed to delete service',
+      );
       throw error;
     }
   }
@@ -171,10 +186,7 @@ export class NetworkManager {
       throw new Error('Network manager not initialized');
     }
 
-    logger.info(
-      { ingress: config.name, host: config.host, path: config.path },
-      'Creating ingress',
-    );
+    logger.info({ ingress: config.name, host: config.host, path: config.path }, 'Creating ingress');
 
     const ingressManifest: k8s.V1Ingress = {
       metadata: {
@@ -220,15 +232,21 @@ export class NetworkManager {
     }
 
     try {
-      await this.networkingClient.createNamespacedIngress(this.config.namespace, ingressManifest);
+      await this.networkingClient.createNamespacedIngress({
+        namespace: this.config.namespace,
+        body: ingressManifest,
+      });
       logger.info({ ingress: config.name }, 'Ingress created successfully');
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 409) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 409) {
         logger.warn({ ingress: config.name }, 'Ingress already exists');
         return;
       }
-      logger.error({ ingress: config.name, error: error instanceof Error ? error.message : error }, 'Failed to create ingress');
+      logger.error(
+        { ingress: config.name, error: error instanceof Error ? error.message : error },
+        'Failed to create ingress',
+      );
       throw error;
     }
   }
@@ -241,15 +259,21 @@ export class NetworkManager {
     logger.info({ ingress: name }, 'Deleting ingress');
 
     try {
-      await this.networkingClient.deleteNamespacedIngress(name, this.config.namespace);
+      await this.networkingClient.deleteNamespacedIngress({
+        name,
+        namespace: this.config.namespace,
+      });
       logger.info({ ingress: name }, 'Ingress deleted successfully');
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 404) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 404) {
         logger.warn({ ingress: name }, 'Ingress not found');
         return;
       }
-      logger.error({ ingress: name, error: error instanceof Error ? error.message : error }, 'Failed to delete ingress');
+      logger.error(
+        { ingress: name, error: error instanceof Error ? error.message : error },
+        'Failed to delete ingress',
+      );
       throw error;
     }
   }
@@ -264,7 +288,10 @@ export class NetworkManager {
       throw new Error('Network manager not initialized');
     }
 
-    logger.info({ policy: name, podSelector: Object.keys(podSelector).join(',') }, 'Creating network policy');
+    logger.info(
+      { policy: name, podSelector: Object.keys(podSelector).join(',') },
+      'Creating network policy',
+    );
 
     const policyManifest: k8s.V1NetworkPolicy = {
       metadata: {
@@ -283,15 +310,21 @@ export class NetworkManager {
     };
 
     try {
-      await this.networkingClient.createNamespacedNetworkPolicy(this.config.namespace, policyManifest);
+      await this.networkingClient.createNamespacedNetworkPolicy({
+        namespace: this.config.namespace,
+        body: policyManifest,
+      });
       logger.info({ policy: name }, 'Network policy created successfully');
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 409) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 409) {
         logger.warn({ policy: name }, 'Network policy already exists');
         return;
       }
-      logger.error({ policy: name, error: error instanceof Error ? error.message : error }, 'Failed to create network policy');
+      logger.error(
+        { policy: name, error: error instanceof Error ? error.message : error },
+        'Failed to create network policy',
+      );
       throw error;
     }
   }
@@ -304,15 +337,21 @@ export class NetworkManager {
     logger.info({ policy: name }, 'Deleting network policy');
 
     try {
-      await this.networkingClient.deleteNamespacedNetworkPolicy(name, this.config.namespace);
+      await this.networkingClient.deleteNamespacedNetworkPolicy({
+        name,
+        namespace: this.config.namespace,
+      });
       logger.info({ policy: name }, 'Network policy deleted successfully');
     } catch (error) {
-      const httpError = error as k8s.HttpError;
-      if (httpError.statusCode === 404) {
+      const apiError = error as k8s.ApiException<unknown>;
+      if (apiError.code === 404) {
         logger.warn({ policy: name }, 'Network policy not found');
         return;
       }
-      logger.error({ policy: name, error: error instanceof Error ? error.message : error }, 'Failed to delete network policy');
+      logger.error(
+        { policy: name, error: error instanceof Error ? error.message : error },
+        'Failed to delete network policy',
+      );
       throw error;
     }
   }
@@ -348,10 +387,24 @@ export class NetworkManager {
     await this.createNetworkPolicy(
       `faas-${functionName}`,
       { 'faas-hot-runtime/function': functionName },
-      [{ from: [{ podSelector: { matchLabels: { 'faas-hot-runtime/function': functionName } } }] }],
+      [
+        {
+          _from: [{ podSelector: { matchLabels: { 'faas-hot-runtime/function': functionName } } }],
+        },
+      ],
       [
         { to: [{ podSelector: { matchLabels: { 'faas-hot-runtime/function': functionName } } }] },
-        { to: [{ namespaceSelector: { matchLabels: { 'kubernetes.io/metadata.name': 'kube-system' } } }], ports: [{ port: 53, protocol: 'UDP' }, { port: 53, protocol: 'TCP' }] },
+        {
+          to: [
+            {
+              namespaceSelector: { matchLabels: { 'kubernetes.io/metadata.name': 'kube-system' } },
+            },
+          ],
+          ports: [
+            { port: 53, protocol: 'UDP' },
+            { port: 53, protocol: 'TCP' },
+          ],
+        },
       ],
     );
   }
