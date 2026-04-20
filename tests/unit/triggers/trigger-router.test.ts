@@ -9,24 +9,35 @@ import type { SQSTriggerHandler } from '../../../src/triggers/sqs-trigger.js';
 import type { PubSubTriggerHandler } from '../../../src/triggers/pubsub-trigger.js';
 
 vi.mock('@google-cloud/pubsub', () => ({
-  PubSub: vi.fn().mockImplementation(() => ({
-    subscription: vi.fn().mockReturnValue({
-      on: vi.fn(),
-      removeListener: vi.fn(),
-      removeAllListeners: vi.fn(),
-    }),
-    topic: vi.fn().mockReturnValue({
-      createSubscription: vi.fn().mockResolvedValue([{}]),
-    }),
-    close: vi.fn().mockResolvedValue(undefined),
-  })),
+  PubSub: function () {
+    return {
+      subscription: vi.fn().mockReturnValue({
+        on: vi.fn(),
+        removeListener: vi.fn(),
+        removeAllListeners: vi.fn(),
+      }),
+      topic: vi.fn().mockReturnValue({
+        createSubscription: vi.fn().mockResolvedValue([{}]),
+      }),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
+  },
+  Duration: {
+    from: vi.fn().mockReturnValue({ seconds: 30 }),
+  },
 }));
 
 const createMockHTTPHandler = () => ({
   handleRequest: vi.fn<() => Promise<InvocationResult>>().mockResolvedValue({
     success: true,
     content: [{ type: 'text', text: 'OK' }],
-    metadata: { function: 'test', pod: 'pod-1', duration_ms: 10, cost_usd: 0.0001, cold_start: false },
+    metadata: {
+      function: 'test',
+      pod: 'pod-1',
+      duration_ms: 10,
+      cost_usd: 0.0001,
+      cold_start: false,
+    },
   }),
 });
 
@@ -34,7 +45,13 @@ const createMockSQSHandler = () => ({
   handleRequest: vi.fn<() => Promise<InvocationResult>>().mockResolvedValue({
     success: true,
     content: [{ type: 'text', text: 'OK' }],
-    metadata: { function: 'test', pod: 'pod-1', duration_ms: 10, cost_usd: 0.0001, cold_start: false },
+    metadata: {
+      function: 'test',
+      pod: 'pod-1',
+      duration_ms: 10,
+      cost_usd: 0.0001,
+      cold_start: false,
+    },
   }),
 });
 
@@ -42,7 +59,13 @@ const createMockPubSubHandler = () => ({
   handleRequest: vi.fn<() => Promise<InvocationResult>>().mockResolvedValue({
     success: true,
     content: [{ type: 'text', text: 'OK' }],
-    metadata: { function: 'test', pod: 'pod-1', duration_ms: 10, cost_usd: 0.0001, cold_start: false },
+    metadata: {
+      function: 'test',
+      pod: 'pod-1',
+      duration_ms: 10,
+      cost_usd: 0.0001,
+      cold_start: false,
+    },
   }),
 });
 
@@ -60,11 +83,24 @@ describe('TriggerRouter', () => {
     name: 'http-function',
     description: 'HTTP function',
     version: '1.0.0',
-    container: { image: 'test:latest', port: 8080, resources: { cpu: '100m', memory: '128Mi', gpu: 0 } },
+    container: {
+      image: 'test:latest',
+      port: 8080,
+      resources: { cpu: '100m', memory: '128Mi', gpu: 0 },
+    },
     pool: { min_size: 1, max_size: 5, target_utilization: 0.7, warm_up_time_seconds: 30 },
     triggers: [{ type: 'http', path: '/http-func', methods: ['POST'] }],
-    mcp: { enabled: false, tool_name: 'http_func', description: 'test', input_schema: { type: 'object', properties: {} } },
-    cost: { budget_daily: 10, cost_per_invocation_estimate: 0.0001, alert_thresholds: [0.5, 0.75, 0.9] },
+    mcp: {
+      enabled: false,
+      tool_name: 'http_func',
+      description: 'test',
+      input_schema: { type: 'object', properties: {} },
+    },
+    cost: {
+      budget_daily: 10,
+      cost_per_invocation_estimate: 0.0001,
+      alert_thresholds: [0.5, 0.75, 0.9],
+    },
     observability: { tracing_enabled: true, metrics_enabled: true, log_level: 'info' },
   };
 
@@ -72,11 +108,26 @@ describe('TriggerRouter', () => {
     name: 'sqs-function',
     description: 'SQS function',
     version: '1.0.0',
-    container: { image: 'test:latest', port: 8080, resources: { cpu: '100m', memory: '128Mi', gpu: 0 } },
+    container: {
+      image: 'test:latest',
+      port: 8080,
+      resources: { cpu: '100m', memory: '128Mi', gpu: 0 },
+    },
     pool: { min_size: 1, max_size: 5, target_utilization: 0.7, warm_up_time_seconds: 30 },
-    triggers: [{ type: 'sqs', queue: 'test-queue', batch_size: 10, visibility_timeout_seconds: 300 }],
-    mcp: { enabled: false, tool_name: 'sqs_func', description: 'test', input_schema: { type: 'object', properties: {} } },
-    cost: { budget_daily: 10, cost_per_invocation_estimate: 0.0001, alert_thresholds: [0.5, 0.75, 0.9] },
+    triggers: [
+      { type: 'sqs', queue: 'test-queue', batch_size: 10, visibility_timeout_seconds: 300 },
+    ],
+    mcp: {
+      enabled: false,
+      tool_name: 'sqs_func',
+      description: 'test',
+      input_schema: { type: 'object', properties: {} },
+    },
+    cost: {
+      budget_daily: 10,
+      cost_per_invocation_estimate: 0.0001,
+      alert_thresholds: [0.5, 0.75, 0.9],
+    },
     observability: { tracing_enabled: true, metrics_enabled: true, log_level: 'info' },
   };
 
@@ -84,11 +135,24 @@ describe('TriggerRouter', () => {
     name: 'pubsub-function',
     description: 'Pub/Sub function',
     version: '1.0.0',
-    container: { image: 'test:latest', port: 8080, resources: { cpu: '100m', memory: '128Mi', gpu: 0 } },
+    container: {
+      image: 'test:latest',
+      port: 8080,
+      resources: { cpu: '100m', memory: '128Mi', gpu: 0 },
+    },
     pool: { min_size: 1, max_size: 5, target_utilization: 0.7, warm_up_time_seconds: 30 },
     triggers: [{ type: 'pubsub', topic: 'test-topic', subscription: 'test-sub' }],
-    mcp: { enabled: false, tool_name: 'pubsub_func', description: 'test', input_schema: { type: 'object', properties: {} } },
-    cost: { budget_daily: 10, cost_per_invocation_estimate: 0.0001, alert_thresholds: [0.5, 0.75, 0.9] },
+    mcp: {
+      enabled: false,
+      tool_name: 'pubsub_func',
+      description: 'test',
+      input_schema: { type: 'object', properties: {} },
+    },
+    cost: {
+      budget_daily: 10,
+      cost_per_invocation_estimate: 0.0001,
+      alert_thresholds: [0.5, 0.75, 0.9],
+    },
     observability: { tracing_enabled: true, metrics_enabled: true, log_level: 'info' },
   };
 
@@ -129,33 +193,45 @@ describe('TriggerRouter', () => {
 
   it('should register HTTP function', async () => {
     await router.start();
-    await router.registerFunction(httpFunction, { http: createMockHTTPHandler() as unknown as HTTPTriggerHandler });
+    await router.registerFunction(httpFunction, {
+      http: createMockHTTPHandler() as unknown as HTTPTriggerHandler,
+    });
     expect(registerSpy).toHaveBeenCalledWith(httpFunction, expect.any(Object));
   });
 
   it('should register SQS function', async () => {
     await router.start();
-    await router.registerFunction(sqsFunction, { sqs: createMockSQSHandler() as unknown as SQSTriggerHandler });
+    await router.registerFunction(sqsFunction, {
+      sqs: createMockSQSHandler() as unknown as SQSTriggerHandler,
+    });
     expect(sqsStartSpy).toHaveBeenCalled();
   });
 
   it('should register Pub/Sub function', async () => {
     await router.start();
-    await router.registerFunction(pubsubFunction, { pubsub: createMockPubSubHandler() as unknown as PubSubTriggerHandler });
+    await router.registerFunction(pubsubFunction, {
+      pubsub: createMockPubSubHandler() as unknown as PubSubTriggerHandler,
+    });
     expect(pubSubStartSpy).toHaveBeenCalled();
   });
 
   it('should unregister function', async () => {
     await router.start();
-    await router.registerFunction(httpFunction, { http: createMockHTTPHandler() as unknown as HTTPTriggerHandler });
+    await router.registerFunction(httpFunction, {
+      http: createMockHTTPHandler() as unknown as HTTPTriggerHandler,
+    });
     await router.unregisterFunction(httpFunction);
     expect(unregisterSpy).toHaveBeenCalledWith(httpFunction.name);
   });
 
   it('should return stats with registered triggers', async () => {
     await router.start();
-    await router.registerFunction(sqsFunction, { sqs: createMockSQSHandler() as unknown as SQSTriggerHandler });
-    await router.registerFunction(pubsubFunction, { pubsub: createMockPubSubHandler() as unknown as PubSubTriggerHandler });
+    await router.registerFunction(sqsFunction, {
+      sqs: createMockSQSHandler() as unknown as SQSTriggerHandler,
+    });
+    await router.registerFunction(pubsubFunction, {
+      pubsub: createMockPubSubHandler() as unknown as PubSubTriggerHandler,
+    });
 
     const stats = router.getStats();
     expect(stats.sqs.queues).toBe(1);
@@ -177,7 +253,9 @@ describe('TriggerRouter', () => {
       sqsAccountId: '123456789',
       pubsubProjectId: 'test-project',
     });
-    await stoppedRouter.registerFunction(sqsFunction, { sqs: createMockSQSHandler() as unknown as SQSTriggerHandler });
+    await stoppedRouter.registerFunction(sqsFunction, {
+      sqs: createMockSQSHandler() as unknown as SQSTriggerHandler,
+    });
     await stoppedRouter.stop();
   });
 
@@ -189,7 +267,9 @@ describe('TriggerRouter', () => {
       sqsAccountId: '123456789',
       pubsubProjectId: 'test-project',
     });
-    await stoppedRouter.registerFunction(pubsubFunction, { pubsub: createMockPubSubHandler() as unknown as PubSubTriggerHandler });
+    await stoppedRouter.registerFunction(pubsubFunction, {
+      pubsub: createMockPubSubHandler() as unknown as PubSubTriggerHandler,
+    });
     await stoppedRouter.stop();
     expect(pubSubStopSpy).toHaveBeenCalled();
   });
