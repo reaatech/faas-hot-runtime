@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { OptimizationEngine } from '../../../src/cost/optimization-engine.js';
 import type { CostRecord, FunctionDefinition } from '../../../src/types/index.js';
-import type { OptimizationConfig, ResourceUsageStats, CostOptimizationRecommendation } from '../../../src/cost/optimization-engine.js';
+import type {
+  OptimizationConfig,
+  ResourceUsageStats,
+  CostOptimizationRecommendation,
+} from '../../../src/cost/optimization-engine.js';
 
 vi.mock('../../../src/observability/logger.js', () => ({
   logger: {
@@ -15,7 +19,13 @@ vi.mock('../../../src/observability/logger.js', () => ({
 describe('OptimizationEngine', () => {
   let engine: OptimizationEngine;
 
-  const createMockFunction = (name: string, cpu: string = '100m', memory: string = '128Mi', minSize: number = 1, maxSize: number = 5): FunctionDefinition => ({
+  const createMockFunction = (
+    name: string,
+    cpu: string = '100m',
+    memory: string = '128Mi',
+    minSize: number = 1,
+    maxSize: number = 5,
+  ): FunctionDefinition => ({
     name,
     description: 'Test function',
     version: '1.0.0',
@@ -24,10 +34,24 @@ describe('OptimizationEngine', () => {
       port: 8080,
       resources: { cpu, memory, gpu: 0 },
     },
-    pool: { min_size: minSize, max_size: maxSize, target_utilization: 0.7, warm_up_time_seconds: 30 },
+    pool: {
+      min_size: minSize,
+      max_size: maxSize,
+      target_utilization: 0.7,
+      warm_up_time_seconds: 30,
+    },
     triggers: [{ type: 'http', path: `/${name}`, methods: ['POST'] }],
-    mcp: { enabled: true, tool_name: name.replace(/-/g, '_'), description: 'Test', input_schema: { type: 'object', properties: {} } },
-    cost: { budget_daily: 10, cost_per_invocation_estimate: 0.0001, alert_thresholds: [0.5, 0.75, 0.9] },
+    mcp: {
+      enabled: true,
+      tool_name: name.replace(/-/g, '_'),
+      description: 'Test',
+      input_schema: { type: 'object', properties: {} },
+    },
+    cost: {
+      budget_daily: 10,
+      cost_per_invocation_estimate: 0.0001,
+      alert_thresholds: [0.5, 0.75, 0.9],
+    },
     observability: { tracing_enabled: true, metrics_enabled: true, log_level: 'info' },
   });
 
@@ -54,8 +78,13 @@ describe('OptimizationEngine', () => {
   describe('constructor', () => {
     it('should use default config', () => {
       const defaultEngine = new OptimizationEngine();
-      expect((defaultEngine as unknown as { config: OptimizationConfig }).config.targetUtilization).toBe(0.7);
-      expect((defaultEngine as unknown as { config: OptimizationConfig }).config.minCostImprovementPercent).toBe(10);
+      expect(
+        (defaultEngine as unknown as { config: OptimizationConfig }).config.targetUtilization,
+      ).toBe(0.7);
+      expect(
+        (defaultEngine as unknown as { config: OptimizationConfig }).config
+          .minCostImprovementPercent,
+      ).toBe(10);
     });
 
     it('should accept custom config', () => {
@@ -63,8 +92,13 @@ describe('OptimizationEngine', () => {
         targetUtilization: 0.8,
         minCostImprovementPercent: 15,
       });
-      expect((customEngine as unknown as { config: OptimizationConfig }).config.targetUtilization).toBe(0.8);
-      expect((customEngine as unknown as { config: OptimizationConfig }).config.minCostImprovementPercent).toBe(15);
+      expect(
+        (customEngine as unknown as { config: OptimizationConfig }).config.targetUtilization,
+      ).toBe(0.8);
+      expect(
+        (customEngine as unknown as { config: OptimizationConfig }).config
+          .minCostImprovementPercent,
+      ).toBe(15);
     });
   });
 
@@ -72,13 +106,17 @@ describe('OptimizationEngine', () => {
     it('should record invocation for function', () => {
       const record = createCostRecord('func1');
       engine.recordInvocation(record);
-      expect((engine as unknown as { costHistory: Map<string, CostRecord[]> }).costHistory.get('func1')).toHaveLength(1);
+      expect(
+        (engine as unknown as { costHistory: Map<string, CostRecord[]> }).costHistory.get('func1'),
+      ).toHaveLength(1);
     });
 
     it('should append to existing history', () => {
       engine.recordInvocation(createCostRecord('func1'));
       engine.recordInvocation(createCostRecord('func1'));
-      expect((engine as unknown as { costHistory: Map<string, CostRecord[]> }).costHistory.get('func1')).toHaveLength(2);
+      expect(
+        (engine as unknown as { costHistory: Map<string, CostRecord[]> }).costHistory.get('func1'),
+      ).toHaveLength(2);
     });
   });
 
@@ -138,7 +176,14 @@ describe('OptimizationEngine', () => {
         totalInvocations: 100,
       };
 
-      const rec = (engine as unknown as { analyzeRightSizing(funcDef: FunctionDefinition, stats: ResourceUsageStats): CostOptimizationRecommendation | null }).analyzeRightSizing(funcDef, stats);
+      const rec = (
+        engine as unknown as {
+          analyzeRightSizing(
+            funcDef: FunctionDefinition,
+            stats: ResourceUsageStats,
+          ): CostOptimizationRecommendation | null;
+        }
+      ).analyzeRightSizing(funcDef, stats);
       expect(rec).toBeNull();
     });
   });
@@ -153,7 +198,14 @@ describe('OptimizationEngine', () => {
         totalInvocations: 100,
       };
 
-      const rec = (engine as unknown as { analyzePoolSize(funcDef: FunctionDefinition, stats: ResourceUsageStats): CostOptimizationRecommendation | null }).analyzePoolSize(funcDef, stats);
+      const rec = (
+        engine as unknown as {
+          analyzePoolSize(
+            funcDef: FunctionDefinition,
+            stats: ResourceUsageStats,
+          ): CostOptimizationRecommendation | null;
+        }
+      ).analyzePoolSize(funcDef, stats);
       expect(rec).toBeNull();
     });
 
@@ -166,7 +218,14 @@ describe('OptimizationEngine', () => {
         totalInvocations: 100,
       };
 
-      const rec = (engine as unknown as { analyzePoolSize(funcDef: FunctionDefinition, stats: ResourceUsageStats): CostOptimizationRecommendation | null }).analyzePoolSize(funcDef, stats);
+      const rec = (
+        engine as unknown as {
+          analyzePoolSize(
+            funcDef: FunctionDefinition,
+            stats: ResourceUsageStats,
+          ): CostOptimizationRecommendation | null;
+        }
+      ).analyzePoolSize(funcDef, stats);
       expect(rec).toBeNull();
     });
   });
@@ -279,8 +338,12 @@ describe('OptimizationEngine', () => {
 
       engine.clearHistory('func1');
 
-      expect((engine as unknown as { costHistory: Map<string, CostRecord[]> }).costHistory.get('func1')).toBeUndefined();
-      expect((engine as unknown as { costHistory: Map<string, CostRecord[]> }).costHistory.get('func2')).toHaveLength(1);
+      expect(
+        (engine as unknown as { costHistory: Map<string, CostRecord[]> }).costHistory.get('func1'),
+      ).toBeUndefined();
+      expect(
+        (engine as unknown as { costHistory: Map<string, CostRecord[]> }).costHistory.get('func2'),
+      ).toHaveLength(1);
     });
 
     it('should clear all history when no function specified', () => {
@@ -289,7 +352,9 @@ describe('OptimizationEngine', () => {
 
       engine.clearHistory();
 
-      expect((engine as unknown as { costHistory: Map<string, CostRecord[]> }).costHistory.size).toBe(0);
+      expect(
+        (engine as unknown as { costHistory: Map<string, CostRecord[]> }).costHistory.size,
+      ).toBe(0);
     });
   });
 });

@@ -87,7 +87,10 @@ export class WarmPoolSkillHandler {
     ];
   }
 
-  async handleToolCall(toolName: string, args: Record<string, unknown>): Promise<{ content: Array<{ type: string; text: string }> }> {
+  async handleToolCall(
+    toolName: string,
+    args: Record<string, unknown>,
+  ): Promise<{ content: Array<{ type: string; text: string }> }> {
     switch (toolName) {
       case 'get_pool_status':
         return this.getPoolStatus(this.validatePoolStatusArgs(args));
@@ -118,7 +121,10 @@ export class WarmPoolSkillHandler {
       throw new McpError(ErrorCode.InvalidParams, 'max_size is required and must be a number');
     }
     if (args['min_size'] > args['max_size']) {
-      throw new McpError(ErrorCode.InvalidParams, 'min_size must be less than or equal to max_size');
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        'min_size must be less than or equal to max_size',
+      );
     }
     if ((args['min_size'] as number) < 0 || (args['max_size'] as number) < 0) {
       throw new McpError(ErrorCode.InvalidParams, 'min_size and max_size must be non-negative');
@@ -140,7 +146,9 @@ export class WarmPoolSkillHandler {
     return result;
   }
 
-  private async getPoolStatus(params: GetPoolStatusParams): Promise<{ content: Array<{ type: string; text: string }> }> {
+  private async getPoolStatus(
+    params: GetPoolStatusParams,
+  ): Promise<{ content: Array<{ type: string; text: string }> }> {
     const poolState = this.poolManager.getPoolState(params.function);
 
     if (!poolState) {
@@ -159,7 +167,9 @@ export class WarmPoolSkillHandler {
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   }
 
-  private async scalePool(params: ScalePoolParams): Promise<{ content: Array<{ type: string; text: string }> }> {
+  private async scalePool(
+    params: ScalePoolParams,
+  ): Promise<{ content: Array<{ type: string; text: string }> }> {
     await this.poolManager.scalePool(params.function, params.min_size, params.max_size);
 
     const result = {
@@ -172,7 +182,9 @@ export class WarmPoolSkillHandler {
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   }
 
-  private async getPodHealth(params: GetPodHealthParams): Promise<{ content: Array<{ type: string; text: string }> }> {
+  private async getPodHealth(
+    params: GetPodHealthParams,
+  ): Promise<{ content: Array<{ type: string; text: string }> }> {
     const poolState = this.poolManager.getPoolState(params.function);
 
     if (!poolState) {

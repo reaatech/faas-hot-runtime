@@ -115,9 +115,7 @@ export class RequestRouter {
     return pods[selectedIndex].pod_id;
   }
 
-  private selectLeastLoaded(
-    pods: Array<{ pod_id: string; active_invocations: number }>,
-  ): string {
+  private selectLeastLoaded(pods: Array<{ pod_id: string; active_invocations: number }>): string {
     let minInvocations = Infinity;
     const candidates: string[] = [];
 
@@ -134,9 +132,7 @@ export class RequestRouter {
     return candidates[Math.floor(Math.random() * candidates.length)] ?? pods[0].pod_id;
   }
 
-  private selectLatencyBased(
-    pods: Array<{ pod_id: string; recent_latency_ms: number }>,
-  ): string {
+  private selectLatencyBased(pods: Array<{ pod_id: string; recent_latency_ms: number }>): string {
     let minLatency = Infinity;
     const candidates: string[] = [];
 

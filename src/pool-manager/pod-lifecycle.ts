@@ -49,7 +49,11 @@ export class PodLifecycle {
       return podHealth;
     } catch (error) {
       logger.error(
-        { pod: podId, function: functionDef.name, error: error instanceof Error ? error.message : error },
+        {
+          pod: podId,
+          function: functionDef.name,
+          error: error instanceof Error ? error.message : error,
+        },
         'Failed to initialize pod',
       );
       throw error;
@@ -99,7 +103,10 @@ export class PodLifecycle {
   transitionToActive(pod: PodHealth): void {
     pod.state = 'active';
     pod.active_invocations += 1;
-    logger.debug({ pod: pod.pod_id, active_invocations: pod.active_invocations }, 'Pod transitioned to active state');
+    logger.debug(
+      { pod: pod.pod_id, active_invocations: pod.active_invocations },
+      'Pod transitioned to active state',
+    );
   }
 
   transitionToCooling(pod: PodHealth): void {

@@ -107,17 +107,17 @@ export class TriggerRouter {
     handler?: SQSTriggerHandler,
   ): Promise<void> {
     let sqsTrigger = this.sqsTriggers.get(trigger.queue);
-      if (!sqsTrigger) {
-        sqsTrigger = new SQSTrigger({
-          queueUrl: `https://sqs.${this.config.sqsRegion}.amazonaws.com/${this.config.sqsAccountId}/${trigger.queue}`,
-          region: this.config.sqsRegion,
-          accountId: this.config.sqsAccountId,
-          queueName: trigger.queue,
-          batchSize: trigger.batch_size || 10,
-          visibilityTimeoutSeconds: trigger.visibility_timeout_seconds || 300,
-          maxReceiveCount: 3,
-          pollIntervalMs: 1000,
-        });
+    if (!sqsTrigger) {
+      sqsTrigger = new SQSTrigger({
+        queueUrl: `https://sqs.${this.config.sqsRegion}.amazonaws.com/${this.config.sqsAccountId}/${trigger.queue}`,
+        region: this.config.sqsRegion,
+        accountId: this.config.sqsAccountId,
+        queueName: trigger.queue,
+        batchSize: trigger.batch_size || 10,
+        visibilityTimeoutSeconds: trigger.visibility_timeout_seconds || 300,
+        maxReceiveCount: 3,
+        pollIntervalMs: 1000,
+      });
 
       if (this.running) {
         await sqsTrigger.start();

@@ -52,14 +52,17 @@ export class ScalingController {
   }
 
   getScalingMetrics(poolState: WarmPoolState): ScalingMetrics {
-    const availablePods = poolState.pod_states.filter((p) => p.state === 'warm' && p.healthy).length;
+    const availablePods = poolState.pod_states.filter(
+      (p) => p.state === 'warm' && p.healthy,
+    ).length;
     const activePods = poolState.pod_states.filter((p) => p.state === 'active').length;
 
     const totalPods = poolState.total_pods || 1;
     const utilization = activePods / totalPods;
 
     const latencySum = poolState.pod_states.reduce((sum, p) => sum + p.recent_latency_ms, 0);
-    const avgLatencyMs = poolState.pod_states.length > 0 ? latencySum / poolState.pod_states.length : 0;
+    const avgLatencyMs =
+      poolState.pod_states.length > 0 ? latencySum / poolState.pod_states.length : 0;
 
     return {
       currentUtilization: utilization,
@@ -185,7 +188,10 @@ export class ScalingController {
   async scaleUp(poolState: WarmPoolState, targetSize?: number): Promise<PodHealth | null> {
     const functionDef = this.functionDefinitions.get(poolState.function);
     if (!functionDef) {
-      logger.error({ function: poolState.function }, 'Cannot scale up: function definition not found');
+      logger.error(
+        { function: poolState.function },
+        'Cannot scale up: function definition not found',
+      );
       return null;
     }
 
@@ -223,7 +229,11 @@ export class ScalingController {
       return podHealth;
     } catch (error) {
       logger.error(
-        { function: poolState.function, pod: podId, error: error instanceof Error ? error.message : error },
+        {
+          function: poolState.function,
+          pod: podId,
+          error: error instanceof Error ? error.message : error,
+        },
         'Failed to scale up pool',
       );
       return null;
@@ -233,7 +243,10 @@ export class ScalingController {
   async scaleDown(poolState: WarmPoolState, _targetSize?: number): Promise<string | null> {
     const functionDef = this.functionDefinitions.get(poolState.function);
     if (!functionDef) {
-      logger.error({ function: poolState.function }, 'Cannot scale down: function definition not found');
+      logger.error(
+        { function: poolState.function },
+        'Cannot scale down: function definition not found',
+      );
       return null;
     }
 
@@ -243,7 +256,9 @@ export class ScalingController {
       return null;
     }
 
-    const idlePods = poolState.pod_states.filter((p) => p.state === 'warm' && p.active_invocations === 0);
+    const idlePods = poolState.pod_states.filter(
+      (p) => p.state === 'warm' && p.active_invocations === 0,
+    );
     if (idlePods.length === 0) {
       logger.debug({ function: poolState.function }, 'No idle pods to remove');
       return null;
@@ -259,14 +274,21 @@ export class ScalingController {
       return podToRemove.pod_id;
     } catch (error) {
       logger.error(
-        { function: poolState.function, pod: podToRemove.pod_id, error: error instanceof Error ? error.message : error },
+        {
+          function: poolState.function,
+          pod: podToRemove.pod_id,
+          error: error instanceof Error ? error.message : error,
+        },
         'Failed to scale down pool',
       );
       return null;
     }
   }
 
-  getScaleHistory(functionName: string): { lastScaleUp: number | undefined; lastScaleDown: number | undefined } {
+  getScaleHistory(functionName: string): {
+    lastScaleUp: number | undefined;
+    lastScaleDown: number | undefined;
+  } {
     return {
       lastScaleUp: this.lastScaleUp.get(functionName),
       lastScaleDown: this.lastScaleDown.get(functionName),

@@ -8,7 +8,12 @@ import {
   McpError,
   type Tool,
 } from '@modelcontextprotocol/sdk/types.js';
-import { createServer, type Server as HTTPServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import {
+  createServer,
+  type Server as HTTPServer,
+  type IncomingMessage,
+  type ServerResponse,
+} from 'node:http';
 import { logger } from '../observability/logger.js';
 import type { FunctionDefinition, InvocationResult } from '../types/index.js';
 import type { ToolRegistry } from './tool-registry.js';
@@ -31,7 +36,10 @@ import {
 
 interface SkillToolHandler {
   getTools(): Tool[];
-  handleToolCall(name: string, args: Record<string, unknown>): Promise<{
+  handleToolCall(
+    name: string,
+    args: Record<string, unknown>,
+  ): Promise<{
     content: Array<{ type: string; text: string }>;
     structuredContent?: Record<string, unknown>;
     _meta?: Record<string, unknown>;
@@ -172,7 +180,10 @@ export class MCPServer {
       }
 
       const allTools = [...functionTools, ...skillTools];
-      logger.debug({ functionToolCount: functionTools.length, skillToolCount: skillTools.length }, 'Listing MCP tools');
+      logger.debug(
+        { functionToolCount: functionTools.length, skillToolCount: skillTools.length },
+        'Listing MCP tools',
+      );
       return { tools: allTools };
     });
 
@@ -212,8 +223,16 @@ export class MCPServer {
   }
 
   private static readonly SENSITIVE_FIELDS = [
-    'password', 'passwd', 'secret', 'token', 'apiKey', 'api_key',
-    'authorization', 'credential', 'private', 'access_token',
+    'password',
+    'passwd',
+    'secret',
+    'token',
+    'apiKey',
+    'api_key',
+    'authorization',
+    'credential',
+    'private',
+    'access_token',
   ];
 
   private redactArgs(args: Record<string, unknown> | undefined): Record<string, unknown> {
@@ -311,11 +330,13 @@ export class MCPServer {
           const apiKey = Array.isArray(apiKeyHeader) ? apiKeyHeader[0] : apiKeyHeader;
           if (!this.authMiddleware.validateApiKey(apiKey)) {
             res.writeHead(401, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-              jsonrpc: '2.0',
-              id: null,
-              error: { code: -32001, message: 'Unauthorized' },
-            }));
+            res.end(
+              JSON.stringify({
+                jsonrpc: '2.0',
+                id: null,
+                error: { code: -32001, message: 'Unauthorized' },
+              }),
+            );
             return;
           }
 
@@ -326,11 +347,17 @@ export class MCPServer {
               'Content-Type': 'application/json',
               'Retry-After': String(rateLimitResult.retryAfter ?? 60),
             });
-            res.end(JSON.stringify({
-              jsonrpc: '2.0',
-              id: null,
-              error: { code: -32002, message: 'Rate limit exceeded', data: { retry_after: rateLimitResult.retryAfter } },
-            }));
+            res.end(
+              JSON.stringify({
+                jsonrpc: '2.0',
+                id: null,
+                error: {
+                  code: -32002,
+                  message: 'Rate limit exceeded',
+                  data: { retry_after: rateLimitResult.retryAfter },
+                },
+              }),
+            );
             return;
           }
 
@@ -376,10 +403,7 @@ export class MCPServer {
           reject(err);
           return;
         }
-        logger.info(
-          { host: this.config.host, port: this.config.port },
-          'MCP server started',
-        );
+        logger.info({ host: this.config.host, port: this.config.port }, 'MCP server started');
         resolve();
       });
     });
@@ -484,7 +508,10 @@ export class MCPServer {
     if (definition.mcp.enabled) {
       this.functionToolNames.add(definition.mcp.tool_name);
     }
-    logger.info({ function: definition.name, tool_name: definition.mcp?.tool_name }, 'Function registered');
+    logger.info(
+      { function: definition.name, tool_name: definition.mcp?.tool_name },
+      'Function registered',
+    );
   }
 
   unregisterFunction(functionName: string): void {

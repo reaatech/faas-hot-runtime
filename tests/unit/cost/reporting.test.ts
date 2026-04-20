@@ -124,7 +124,7 @@ describe('CostReporting', () => {
       const report = reporting.generateReport(startDate, endDate);
 
       expect(report.byFunction).toHaveLength(2);
-      const func1 = report.byFunction.find(f => f.functionName === 'func1');
+      const func1 = report.byFunction.find((f) => f.functionName === 'func1');
       expect(func1?.totalCost).toBe(0.03);
       expect(func1?.invocationCount).toBe(2);
       expect(func1?.avgCostPerInvocation).toBe(0.015);
@@ -140,8 +140,8 @@ describe('CostReporting', () => {
 
       const report = reporting.generateReport(startDate, endDate);
 
-      const func1 = report.byFunction.find(f => f.functionName === 'func1');
-      const func2 = report.byFunction.find(f => f.functionName === 'func2');
+      const func1 = report.byFunction.find((f) => f.functionName === 'func1');
+      const func2 = report.byFunction.find((f) => f.functionName === 'func2');
       expect(func1?.percentOfTotal).toBe(25);
       expect(func2?.percentOfTotal).toBe(75);
     });
@@ -172,7 +172,9 @@ describe('CostReporting', () => {
     it('should detect increasing trend', () => {
       const now = Date.now();
       for (let i = 0; i < 3; i++) {
-        reporting.addRecord(createCostRecord('func1', 5, new Date(now - (7 + i) * 24 * 60 * 60 * 1000)));
+        reporting.addRecord(
+          createCostRecord('func1', 5, new Date(now - (7 + i) * 24 * 60 * 60 * 1000)),
+        );
       }
       for (let i = 0; i < 3; i++) {
         reporting.addRecord(createCostRecord('func1', 15, new Date(now - i * 24 * 60 * 60 * 1000)));
@@ -185,7 +187,9 @@ describe('CostReporting', () => {
     it('should detect decreasing trend', () => {
       const now = Date.now();
       for (let i = 0; i < 3; i++) {
-        reporting.addRecord(createCostRecord('func1', 15, new Date(now - (7 + i) * 24 * 60 * 60 * 1000)));
+        reporting.addRecord(
+          createCostRecord('func1', 15, new Date(now - (7 + i) * 24 * 60 * 60 * 1000)),
+        );
       }
       for (let i = 0; i < 3; i++) {
         reporting.addRecord(createCostRecord('func1', 5, new Date(now - i * 24 * 60 * 60 * 1000)));
@@ -230,7 +234,10 @@ describe('CostReporting', () => {
     });
 
     it('should default to JSON for unknown format', () => {
-      const result = reporting.exportReport({ type: 'unknown' as unknown as ExportFormat['type'], includeRawData: false });
+      const result = reporting.exportReport({
+        type: 'unknown' as unknown as ExportFormat['type'],
+        includeRawData: false,
+      });
       expect(result).toContain('"totalCost"');
     });
   });

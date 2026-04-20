@@ -45,7 +45,10 @@ export class HealthMonitor {
 
     this.intervalHandle = setInterval(() => {
       this.runHealthCheck().catch((error) => {
-        logger.error({ error: error instanceof Error ? error.message : error }, 'Health check failed');
+        logger.error(
+          { error: error instanceof Error ? error.message : error },
+          'Health check failed',
+        );
       });
     }, this.config.checkIntervalMs);
     this.intervalHandle.unref();
@@ -92,7 +95,10 @@ export class HealthMonitor {
       try {
         callback(allResults);
       } catch (error) {
-        logger.error({ error: error instanceof Error ? error.message : error }, 'Health check callback failed');
+        logger.error(
+          { error: error instanceof Error ? error.message : error },
+          'Health check callback failed',
+        );
       }
     }
 
@@ -220,7 +226,12 @@ export class HealthMonitor {
   getLatencyStats(pod: PodHealth): { avg: number; p50: number; p95: number; p99: number } {
     const samples = this.latencyHistory.get(pod.pod_id);
     if (!samples || samples.length === 0) {
-      return { avg: pod.recent_latency_ms, p50: pod.recent_latency_ms, p95: pod.recent_latency_ms, p99: pod.recent_latency_ms };
+      return {
+        avg: pod.recent_latency_ms,
+        p50: pod.recent_latency_ms,
+        p95: pod.recent_latency_ms,
+        p99: pod.recent_latency_ms,
+      };
     }
 
     const sorted = [...samples].sort((a, b) => a - b);

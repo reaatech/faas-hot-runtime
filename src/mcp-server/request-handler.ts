@@ -41,8 +41,16 @@ export class RequestHandler {
    * Handle a tool call request
    */
   private static readonly SENSITIVE_FIELDS = [
-    'password', 'passwd', 'secret', 'token', 'apiKey', 'api_key',
-    'authorization', 'credential', 'private', 'access_token',
+    'password',
+    'passwd',
+    'secret',
+    'token',
+    'apiKey',
+    'api_key',
+    'authorization',
+    'credential',
+    'private',
+    'access_token',
   ];
 
   private static redactSensitiveArgs(args: Record<string, unknown>): Record<string, unknown> {
@@ -59,10 +67,7 @@ export class RequestHandler {
     return redacted;
   }
 
-  async handleToolCall(
-    name: string,
-    args: Record<string, unknown>,
-  ): Promise<InvocationResult> {
+  async handleToolCall(name: string, args: Record<string, unknown>): Promise<InvocationResult> {
     const requestId = crypto.randomUUID();
     const startTime = Date.now();
     const redactedArgs = RequestHandler.redactSensitiveArgs(args);
@@ -79,19 +84,13 @@ export class RequestHandler {
       // Get function name from tool name
       const functionName = this.toolRegistry.getFunctionName(name);
       if (!functionName) {
-        throw new McpError(
-          ErrorCode.MethodNotFound,
-          `Tool "${name}" is not mapped to a function`,
-        );
+        throw new McpError(ErrorCode.MethodNotFound, `Tool "${name}" is not mapped to a function`);
       }
 
       // Get function definition
       const functionDef = this.functionRegistry.getFunction(functionName);
       if (!functionDef) {
-        throw new McpError(
-          ErrorCode.InvalidParams,
-          `Function "${functionName}" not found`,
-        );
+        throw new McpError(ErrorCode.InvalidParams, `Function "${functionName}" not found`);
       }
 
       // Validate arguments against schema
@@ -240,10 +239,7 @@ export class RequestHandler {
         break;
       case 'object':
         if (actualType !== 'object' || value === null || Array.isArray(value)) {
-          throw new McpError(
-            ErrorCode.InvalidParams,
-            `Parameter "${paramName}" must be an object`,
-          );
+          throw new McpError(ErrorCode.InvalidParams, `Parameter "${paramName}" must be an object`);
         }
         this.validateObject(
           value as Record<string, unknown>,
@@ -255,10 +251,7 @@ export class RequestHandler {
         break;
       case 'array':
         if (!Array.isArray(value)) {
-          throw new McpError(
-            ErrorCode.InvalidParams,
-            `Parameter "${paramName}" must be an array`,
-          );
+          throw new McpError(ErrorCode.InvalidParams, `Parameter "${paramName}" must be an array`);
         }
         if (schema.items) {
           value.forEach((item, index) => {

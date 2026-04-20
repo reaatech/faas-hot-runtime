@@ -26,7 +26,7 @@ describe('BudgetManager', () => {
       expect(result.reason).toBe('Daily budget limit exceeded');
     });
 
-it('should reject costs when monthly limit exceeded', () => {
+    it('should reject costs when monthly limit exceeded', () => {
       // Create manager with high daily limit so we can test monthly in isolation
       const highDailyManager = new BudgetManager({
         dailyLimit: 10000, // High enough to not trigger

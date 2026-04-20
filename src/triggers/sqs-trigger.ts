@@ -1,4 +1,10 @@
-import { SQSClient, ReceiveMessageCommand, DeleteMessageBatchCommand, SendMessageCommand, type Message } from '@aws-sdk/client-sqs';
+import {
+  SQSClient,
+  ReceiveMessageCommand,
+  DeleteMessageBatchCommand,
+  SendMessageCommand,
+  type Message,
+} from '@aws-sdk/client-sqs';
 import { logger } from '../observability/logger.js';
 import type { InvocationRequest, InvocationResult, FunctionDefinition } from '../types/index.js';
 
@@ -31,7 +37,9 @@ export class SQSTrigger {
   constructor(config: SQSTriggerConfig) {
     this.config = config;
     this.client = new SQSClient({ region: config.region });
-    this.queueUrl = config.queueUrl ?? `https://sqs.${config.region}.amazonaws.com/${config.accountId}/${config.queueName}`;
+    this.queueUrl =
+      config.queueUrl ??
+      `https://sqs.${config.region}.amazonaws.com/${config.accountId}/${config.queueName}`;
   }
 
   async start(): Promise<void> {
@@ -54,12 +62,14 @@ export class SQSTrigger {
     if (!this.running) return;
 
     try {
-      const response = await this.client.send(new ReceiveMessageCommand({
-        QueueUrl: this.queueUrl,
-        MaxNumberOfMessages: this.config.batchSize,
-        WaitTimeSeconds: 20,
-        VisibilityTimeout: this.config.visibilityTimeoutSeconds,
-      }));
+      const response = await this.client.send(
+        new ReceiveMessageCommand({
+          QueueUrl: this.queueUrl,
+          MaxNumberOfMessages: this.config.batchSize,
+          WaitTimeSeconds: 20,
+          VisibilityTimeout: this.config.visibilityTimeoutSeconds,
+        }),
+      );
 
       this.attempt = 0;
 
@@ -106,10 +116,12 @@ export class SQSTrigger {
       }
 
       if (deleteEntries.length > 0) {
-        await this.client.send(new DeleteMessageBatchCommand({
-          QueueUrl: this.queueUrl,
-          Entries: deleteEntries,
-        }));
+        await this.client.send(
+          new DeleteMessageBatchCommand({
+            QueueUrl: this.queueUrl,
+            Entries: deleteEntries,
+          }),
+        );
       }
 
       this.pollTimeout = setTimeout(() => this.pollQueue(), 0);
@@ -132,15 +144,19 @@ export class SQSTrigger {
     if (receiveCount >= this.config.maxReceiveCount) {
       const dlqUrl = this.config.dlqUrl ?? `${this.queueUrl}-dlq`;
       try {
-        await this.client.send(new SendMessageCommand({
-          QueueUrl: dlqUrl,
-          MessageBody: message.Body ?? JSON.stringify(body),
-        }));
+        await this.client.send(
+          new SendMessageCommand({
+            QueueUrl: dlqUrl,
+            MessageBody: message.Body ?? JSON.stringify(body),
+          }),
+        );
         if (message.MessageId && message.ReceiptHandle) {
-          await this.client.send(new DeleteMessageBatchCommand({
-            QueueUrl: this.queueUrl,
-            Entries: [{ Id: message.MessageId, ReceiptHandle: message.ReceiptHandle }],
-          }));
+          await this.client.send(
+            new DeleteMessageBatchCommand({
+              QueueUrl: this.queueUrl,
+              Entries: [{ Id: message.MessageId, ReceiptHandle: message.ReceiptHandle }],
+            }),
+          );
         }
         logger.info({ messageId: message.MessageId }, 'Message sent to DLQ');
       } catch (error) {

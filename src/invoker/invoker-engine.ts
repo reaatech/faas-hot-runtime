@@ -1,9 +1,6 @@
 import http from 'node:http';
 import { logger } from '../observability/logger.js';
-import type {
-  InvocationRequest,
-  InvocationResult,
-} from '../types/index.js';
+import type { InvocationRequest, InvocationResult } from '../types/index.js';
 import type { PoolManager } from '../pool-manager/pool-manager.js';
 import type { FunctionRegistry } from '../registry/function-registry.js';
 import { RequestRouter } from './request-router.js';
@@ -92,12 +89,7 @@ export class InvokerEngine {
             this.timeoutManager.clearInvocationTimeout(request_id);
           }
 
-          this.timeoutManager.startInvocation(
-            request_id,
-            functionName,
-            podId,
-            effectiveTimeout,
-          );
+          this.timeoutManager.startInvocation(request_id, functionName, podId, effectiveTimeout);
 
           const result = await this.executeOnPod(
             functionDef,
@@ -112,7 +104,12 @@ export class InvokerEngine {
           await this.poolManager.releasePod(functionName, podId, Date.now() - podStartTime);
 
           logger.info(
-            { function: functionName, pod_id: podId, duration_ms: Date.now() - startTime, request_id },
+            {
+              function: functionName,
+              pod_id: podId,
+              duration_ms: Date.now() - startTime,
+              request_id,
+            },
             'Function invocation completed',
           );
 
@@ -138,7 +135,9 @@ export class InvokerEngine {
         }
       }
 
-      await this.poolManager.releasePod(functionName, podId, Date.now() - startTime).catch(() => {});
+      await this.poolManager
+        .releasePod(functionName, podId, Date.now() - startTime)
+        .catch(() => {});
 
       return this.createErrorResult(
         lastError?.name ?? 'InvocationError',
@@ -307,8 +306,16 @@ export class InvokerEngine {
   }
 
   private static readonly SENSITIVE_FIELDS = [
-    'password', 'passwd', 'secret', 'token', 'apiKey', 'api_key',
-    'authorization', 'credential', 'private', 'access_token',
+    'password',
+    'passwd',
+    'secret',
+    'token',
+    'apiKey',
+    'api_key',
+    'authorization',
+    'credential',
+    'private',
+    'access_token',
   ];
 
   private static redactSensitiveArgs(args: Record<string, unknown>): Record<string, unknown> {

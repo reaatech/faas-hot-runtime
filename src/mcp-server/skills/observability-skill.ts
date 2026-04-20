@@ -123,15 +123,18 @@ export class ObservabilitySkillHandler {
   private validateTracesArgs(args: Record<string, unknown>): GetTracesParams {
     const result: GetTracesParams = {};
     if (args['function'] !== undefined) {
-      if (typeof args['function'] !== 'string') throw new McpError(ErrorCode.InvalidParams, 'function must be a string');
+      if (typeof args['function'] !== 'string')
+        throw new McpError(ErrorCode.InvalidParams, 'function must be a string');
       result.function = args['function'];
     }
     if (args['trace_id'] !== undefined) {
-      if (typeof args['trace_id'] !== 'string') throw new McpError(ErrorCode.InvalidParams, 'trace_id must be a string');
+      if (typeof args['trace_id'] !== 'string')
+        throw new McpError(ErrorCode.InvalidParams, 'trace_id must be a string');
       result.trace_id = args['trace_id'];
     }
     if (args['limit'] !== undefined) {
-      if (typeof args['limit'] !== 'number') throw new McpError(ErrorCode.InvalidParams, 'limit must be a number');
+      if (typeof args['limit'] !== 'number')
+        throw new McpError(ErrorCode.InvalidParams, 'limit must be a number');
       result.limit = Math.min(args['limit'], ObservabilitySkillHandler.MAX_LIMIT);
     }
     return result;
@@ -140,15 +143,18 @@ export class ObservabilitySkillHandler {
   private validateMetricsArgs(args: Record<string, unknown>): GetMetricsParams {
     const result: GetMetricsParams = {};
     if (args['function'] !== undefined) {
-      if (typeof args['function'] !== 'string') throw new McpError(ErrorCode.InvalidParams, 'function must be a string');
+      if (typeof args['function'] !== 'string')
+        throw new McpError(ErrorCode.InvalidParams, 'function must be a string');
       result.function = args['function'];
     }
     if (args['metric_names'] !== undefined) {
-      if (!Array.isArray(args['metric_names'])) throw new McpError(ErrorCode.InvalidParams, 'metric_names must be an array');
+      if (!Array.isArray(args['metric_names']))
+        throw new McpError(ErrorCode.InvalidParams, 'metric_names must be an array');
       result.metric_names = args['metric_names'] as string[];
     }
     if (args['range'] !== undefined) {
-      if (typeof args['range'] !== 'string') throw new McpError(ErrorCode.InvalidParams, 'range must be a string');
+      if (typeof args['range'] !== 'string')
+        throw new McpError(ErrorCode.InvalidParams, 'range must be a string');
       result.range = args['range'];
     }
     return result;
@@ -157,21 +163,30 @@ export class ObservabilitySkillHandler {
   private validateLogsArgs(args: Record<string, unknown>): GetLogsParams {
     const result: GetLogsParams = {};
     if (args['function'] !== undefined) {
-      if (typeof args['function'] !== 'string') throw new McpError(ErrorCode.InvalidParams, 'function must be a string');
+      if (typeof args['function'] !== 'string')
+        throw new McpError(ErrorCode.InvalidParams, 'function must be a string');
       result.function = args['function'];
     }
     if (args['level'] !== undefined) {
-      if (typeof args['level'] !== 'string' || !['debug', 'info', 'warn', 'error'].includes(args['level'])) {
-        throw new McpError(ErrorCode.InvalidParams, 'level must be one of: debug, info, warn, error');
+      if (
+        typeof args['level'] !== 'string' ||
+        !['debug', 'info', 'warn', 'error'].includes(args['level'])
+      ) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          'level must be one of: debug, info, warn, error',
+        );
       }
       result.level = args['level'] as GetLogsParams['level'];
     }
     if (args['request_id'] !== undefined) {
-      if (typeof args['request_id'] !== 'string') throw new McpError(ErrorCode.InvalidParams, 'request_id must be a string');
+      if (typeof args['request_id'] !== 'string')
+        throw new McpError(ErrorCode.InvalidParams, 'request_id must be a string');
       result.request_id = args['request_id'];
     }
     if (args['limit'] !== undefined) {
-      if (typeof args['limit'] !== 'number') throw new McpError(ErrorCode.InvalidParams, 'limit must be a number');
+      if (typeof args['limit'] !== 'number')
+        throw new McpError(ErrorCode.InvalidParams, 'limit must be a number');
       result.limit = Math.min(args['limit'], ObservabilitySkillHandler.MAX_LIMIT);
     }
     return result;
@@ -198,7 +213,9 @@ export class ObservabilitySkillHandler {
       spans: [trace],
     }));
 
-    return { content: [{ type: 'text', text: JSON.stringify({ traces: traceSummaries }, null, 2) }] };
+    return {
+      content: [{ type: 'text', text: JSON.stringify({ traces: traceSummaries }, null, 2) }],
+    };
   }
 
   private getMetrics(params: GetMetricsParams): { content: Array<{ type: string; text: string }> } {
@@ -208,7 +225,14 @@ export class ObservabilitySkillHandler {
       range: params.range || '1h',
     });
 
-    const groupedMetrics = new Map<string, { name: string; type: string; points: Array<{ timestamp: string; value: number; labels: Record<string, string> }> }>();
+    const groupedMetrics = new Map<
+      string,
+      {
+        name: string;
+        type: string;
+        points: Array<{ timestamp: string; value: number; labels: Record<string, string> }>;
+      }
+    >();
 
     for (const metric of metrics) {
       const key = `${metric.name}:${JSON.stringify(metric.labels)}`;

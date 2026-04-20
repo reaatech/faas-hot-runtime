@@ -91,7 +91,8 @@ export class QueueSkillHandler {
             message_ids: {
               type: 'array',
               items: { type: 'string' },
-              description: 'Specific message IDs to replay (optional, replays all if not specified)',
+              description:
+                'Specific message IDs to replay (optional, replays all if not specified)',
             },
           },
           required: ['queue'],
@@ -120,18 +121,23 @@ export class QueueSkillHandler {
 
   private validateQueueName(name: string): void {
     if (!QueueSkillHandler.VALID_QUEUE_NAME.test(name)) {
-      throw new McpError(ErrorCode.InvalidParams, `Invalid queue name: ${name}. Only alphanumeric, hyphens, and underscores allowed.`);
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        `Invalid queue name: ${name}. Only alphanumeric, hyphens, and underscores allowed.`,
+      );
     }
   }
 
   private validateQueueStatusArgs(args: Record<string, unknown>): GetQueueStatusParams {
     const result: GetQueueStatusParams = {};
     if (args['function'] !== undefined) {
-      if (typeof args['function'] !== 'string') throw new McpError(ErrorCode.InvalidParams, 'function must be a string');
+      if (typeof args['function'] !== 'string')
+        throw new McpError(ErrorCode.InvalidParams, 'function must be a string');
       result.function = args['function'];
     }
     if (args['queue'] !== undefined) {
-      if (typeof args['queue'] !== 'string') throw new McpError(ErrorCode.InvalidParams, 'queue must be a string');
+      if (typeof args['queue'] !== 'string')
+        throw new McpError(ErrorCode.InvalidParams, 'queue must be a string');
       this.validateQueueName(args['queue']);
       result.queue = args['queue'];
     }
@@ -145,7 +151,8 @@ export class QueueSkillHandler {
     this.validateQueueName(args['queue']);
     const result: GetDLQMessagesParams = { queue: args['queue'] };
     if (args['max_messages'] !== undefined) {
-      if (typeof args['max_messages'] !== 'number') throw new McpError(ErrorCode.InvalidParams, 'max_messages must be a number');
+      if (typeof args['max_messages'] !== 'number')
+        throw new McpError(ErrorCode.InvalidParams, 'max_messages must be a number');
       result.max_messages = args['max_messages'];
     }
     return result;
@@ -158,7 +165,8 @@ export class QueueSkillHandler {
     this.validateQueueName(args['queue']);
     const result: ReplayDLQParams = { queue: args['queue'] };
     if (args['message_ids'] !== undefined) {
-      if (!Array.isArray(args['message_ids'])) throw new McpError(ErrorCode.InvalidParams, 'message_ids must be an array');
+      if (!Array.isArray(args['message_ids']))
+        throw new McpError(ErrorCode.InvalidParams, 'message_ids must be an array');
       result.message_ids = args['message_ids'] as string[];
     }
     return result;
@@ -265,7 +273,11 @@ export class QueueSkillHandler {
           content: [
             {
               type: 'text',
-              text: JSON.stringify({ replayed: 0, failed: 0, message: 'No messages to replay' }, null, 2),
+              text: JSON.stringify(
+                { replayed: 0, failed: 0, message: 'No messages to replay' },
+                null,
+                2,
+              ),
             },
           ],
         };

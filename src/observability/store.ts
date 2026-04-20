@@ -188,11 +188,7 @@ class ObservabilityStore {
     this.metricIndex++;
   }
 
-  getTraces(params: {
-    function?: string;
-    trace_id?: string;
-    limit?: number;
-  }): TraceRecord[] {
+  getTraces(params: { function?: string; trace_id?: string; limit?: number }): TraceRecord[] {
     let filtered = this.traces;
 
     if (params.trace_id) {
@@ -201,7 +197,9 @@ class ObservabilityStore {
 
     if (params.function) {
       filtered = filtered.filter(
-        (t) => t.attributes['faas.function'] === params.function || t.attributes['function'] === params.function,
+        (t) =>
+          t.attributes['faas.function'] === params.function ||
+          t.attributes['function'] === params.function,
       );
     }
 
@@ -232,9 +230,7 @@ class ObservabilityStore {
       filtered = filtered.filter((m) => m.timestamp >= cutoff);
     }
 
-    return filtered
-      .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
-      .slice(0, 1000);
+    return filtered.sort((a, b) => b.timestamp.localeCompare(a.timestamp)).slice(0, 1000);
   }
 
   getLogs(params: {

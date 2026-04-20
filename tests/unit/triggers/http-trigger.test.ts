@@ -7,7 +7,13 @@ const createMockHandler = () => ({
   handleRequest: vi.fn<() => Promise<InvocationResult>>().mockResolvedValue({
     success: true,
     content: [{ type: 'text', text: 'OK' }],
-    metadata: { function: 'test', pod: 'pod-1', duration_ms: 10, cost_usd: 0.0001, cold_start: false },
+    metadata: {
+      function: 'test',
+      pod: 'pod-1',
+      duration_ms: 10,
+      cost_usd: 0.0001,
+      cold_start: false,
+    },
   }),
 });
 
@@ -89,8 +95,17 @@ describe('HTTPTrigger', () => {
     },
     pool: { min_size: 1, max_size: 5, target_utilization: 0.7, warm_up_time_seconds: 30 },
     triggers: [{ type: 'http', path: '/test', methods: ['POST'] }],
-    mcp: { enabled: false, tool_name: 'test', description: 'test', input_schema: { type: 'object', properties: {} } },
-    cost: { budget_daily: 10, cost_per_invocation_estimate: 0.0001, alert_thresholds: [0.5, 0.75, 0.9] },
+    mcp: {
+      enabled: false,
+      tool_name: 'test',
+      description: 'test',
+      input_schema: { type: 'object', properties: {} },
+    },
+    cost: {
+      budget_daily: 10,
+      cost_per_invocation_estimate: 0.0001,
+      alert_thresholds: [0.5, 0.75, 0.9],
+    },
     observability: { tracing_enabled: true, metrics_enabled: true, log_level: 'info' },
   };
 
@@ -116,7 +131,9 @@ describe('HTTPTrigger', () => {
     const req = createMockRequest('/health', 'GET');
     const res = createMockResponse();
 
-    await (trigger as unknown as { handleRequest: (req: object, res: object) => Promise<void> }).handleRequest(req, res);
+    await (
+      trigger as unknown as { handleRequest: (req: object, res: object) => Promise<void> }
+    ).handleRequest(req, res);
 
     expect(res.statusCode).toBe(200);
     expect(JSON.parse(res.body)).toEqual({ status: 'healthy' });
@@ -126,17 +143,28 @@ describe('HTTPTrigger', () => {
     const req = createMockRequest('/unknown', 'GET');
     const res = createMockResponse();
 
-    await (trigger as unknown as { handleRequest: (req: object, res: object) => Promise<void> }).handleRequest(req, res);
+    await (
+      trigger as unknown as { handleRequest: (req: object, res: object) => Promise<void> }
+    ).handleRequest(req, res);
 
     expect(res.statusCode).toBe(404);
   });
 
   it('should invoke handler on POST to registered path', async () => {
     trigger.registerFunction(mockFunction, mockHandler as unknown as HTTPTriggerHandler);
-    const req = createMockRequest('/test', 'POST', { 'content-type': 'application/json' }, JSON.stringify({ key: 'value' }));
+    const req = createMockRequest(
+      '/test',
+      'POST',
+      { 'content-type': 'application/json' },
+      JSON.stringify({ key: 'value' }),
+    );
     const res = createMockResponse();
 
-    const promise = (trigger as unknown as { handleRequest: (req: ReturnType<typeof createMockRequest>, res: object) => Promise<void> }).handleRequest(req, res);
+    const promise = (
+      trigger as unknown as {
+        handleRequest: (req: ReturnType<typeof createMockRequest>, res: object) => Promise<void>;
+      }
+    ).handleRequest(req, res);
     req.emitBody();
     await promise;
 
@@ -152,10 +180,19 @@ describe('HTTPTrigger', () => {
     trigger.registerFunction(mockFunction, mockHandler as unknown as HTTPTriggerHandler);
     mockHandler.handleRequest.mockRejectedValue(new Error('Handler error'));
 
-    const req = createMockRequest('/test', 'POST', { 'content-type': 'application/json' }, JSON.stringify({ key: 'value' }));
+    const req = createMockRequest(
+      '/test',
+      'POST',
+      { 'content-type': 'application/json' },
+      JSON.stringify({ key: 'value' }),
+    );
     const res = createMockResponse();
 
-    const promise = (trigger as unknown as { handleRequest: (req: ReturnType<typeof createMockRequest>, res: object) => Promise<void> }).handleRequest(req, res);
+    const promise = (
+      trigger as unknown as {
+        handleRequest: (req: ReturnType<typeof createMockRequest>, res: object) => Promise<void>;
+      }
+    ).handleRequest(req, res);
     req.emitBody();
     await promise;
 
@@ -165,10 +202,19 @@ describe('HTTPTrigger', () => {
   it('should handle invalid JSON body', async () => {
     trigger.registerFunction(mockFunction, mockHandler as unknown as HTTPTriggerHandler);
 
-    const req = createMockRequest('/test', 'POST', { 'content-type': 'application/json' }, 'invalid json{');
+    const req = createMockRequest(
+      '/test',
+      'POST',
+      { 'content-type': 'application/json' },
+      'invalid json{',
+    );
     const res = createMockResponse();
 
-    const promise = (trigger as unknown as { handleRequest: (req: ReturnType<typeof createMockRequest>, res: object) => Promise<void> }).handleRequest(req, res);
+    const promise = (
+      trigger as unknown as {
+        handleRequest: (req: ReturnType<typeof createMockRequest>, res: object) => Promise<void>;
+      }
+    ).handleRequest(req, res);
     req.emitBody();
     await promise;
 
@@ -188,7 +234,11 @@ describe('HTTPTrigger', () => {
     const req = createMockRequest('/test', 'POST', {}, JSON.stringify({ key: 'value' }));
     const res = createMockResponse();
 
-    const promise = (protectedTrigger as unknown as { handleRequest: (req: ReturnType<typeof createMockRequest>, res: object) => Promise<void> }).handleRequest(req, res);
+    const promise = (
+      protectedTrigger as unknown as {
+        handleRequest: (req: ReturnType<typeof createMockRequest>, res: object) => Promise<void>;
+      }
+    ).handleRequest(req, res);
     req.emitBody();
     await promise;
 

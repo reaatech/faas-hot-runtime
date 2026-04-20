@@ -92,7 +92,11 @@ export class ResponseHandler {
     };
   }
 
-  private buildMetadata(functionDef: { name: string }, podId: string, durationMs: number): InvocationMetadata {
+  private buildMetadata(
+    functionDef: { name: string },
+    podId: string,
+    durationMs: number,
+  ): InvocationMetadata {
     return {
       function: functionDef.name,
       pod: podId,
@@ -307,7 +311,9 @@ export class ResponseHandler {
 
         if (res.statusCode !== 200) {
           let data = '';
-          res.on('data', (chunk) => { data += chunk; });
+          res.on('data', (chunk) => {
+            data += chunk;
+          });
           res.on('end', () => {
             finish(new Error(`HTTP ${res.statusCode}: ${data}`));
           });

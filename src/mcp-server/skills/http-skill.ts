@@ -77,7 +77,10 @@ export class HttpSkillHandler {
   }
 
   private static readonly SENSITIVE_RESPONSE_HEADERS = [
-    'x-internal-', 'server', 'x-powered-by', 'x-request-id',
+    'x-internal-',
+    'server',
+    'x-powered-by',
+    'x-request-id',
   ];
 
   async handleToolCall(
@@ -121,8 +124,14 @@ export class HttpSkillHandler {
     }
     const result: TestHttpEndpointParams = { path };
     if (args['method'] !== undefined) {
-      if (typeof args['method'] !== 'string' || !['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(args['method'])) {
-        throw new McpError(ErrorCode.InvalidParams, 'method must be one of: GET, POST, PUT, PATCH, DELETE');
+      if (
+        typeof args['method'] !== 'string' ||
+        !['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(args['method'])
+      ) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          'method must be one of: GET, POST, PUT, PATCH, DELETE',
+        );
       }
       result.method = args['method'] as TestHttpEndpointParams['method'];
     }
@@ -141,9 +150,9 @@ export class HttpSkillHandler {
     return result;
   }
 
-  private getHttpEndpoints(
-    params: GetHttpEndpointsParams,
-  ): { content: Array<{ type: string; text: string }> } {
+  private getHttpEndpoints(params: GetHttpEndpointsParams): {
+    content: Array<{ type: string; text: string }>;
+  } {
     const functions = this.functionRegistry.getAllFunctions();
     const endpoints = [];
 

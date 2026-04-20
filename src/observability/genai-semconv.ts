@@ -26,11 +26,7 @@ export class GenAISemConv {
     return this._tracer;
   }
 
-  startGenAISpan(
-    functionName: string,
-    attributes: GenAIAttributes,
-    requestId: string,
-  ): Span {
+  startGenAISpan(functionName: string, attributes: GenAIAttributes, requestId: string): Span {
     const span = this.tracer.startSpan(`faas.invoke.${functionName}`);
 
     span.setAttribute('gen_ai.operation.name', attributes.operationName);
@@ -53,11 +49,7 @@ export class GenAISemConv {
     return span;
   }
 
-  endGenAISpan(
-    span: Span,
-    attributes: GenAIAttributes,
-    durationMs: number,
-  ): void {
+  endGenAISpan(span: Span, attributes: GenAIAttributes, durationMs: number): void {
     if (attributes.model) {
       span.setAttribute('gen_ai.response.model', attributes.model);
     }
@@ -94,11 +86,11 @@ export class GenAISemConv {
     span.end();
   }
 
-  calculateTokenCost(params: {
-    model: string;
-    inputTokens: number;
-    outputTokens: number;
-  }): { cost_usd: number; cost_per_million_input: number; cost_per_million_output: number } {
+  calculateTokenCost(params: { model: string; inputTokens: number; outputTokens: number }): {
+    cost_usd: number;
+    cost_per_million_input: number;
+    cost_per_million_output: number;
+  } {
     const pricing: Record<string, { input: number; output: number }> = {
       'gpt-4': { input: 0.03, output: 0.06 },
       'gpt-4-turbo': { input: 0.01, output: 0.03 },

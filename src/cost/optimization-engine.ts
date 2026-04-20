@@ -96,13 +96,17 @@ export class OptimizationEngine {
     const history = this.costHistory.get(functionName);
     const utilizationHistory = this.utilizationHistory.get(functionName);
 
-    if ((!history || history.length === 0) && (!utilizationHistory || utilizationHistory.length === 0)) {
+    if (
+      (!history || history.length === 0) &&
+      (!utilizationHistory || utilizationHistory.length === 0)
+    ) {
       return null;
     }
 
     const cutoff = Date.now() - this.config.analysisWindowMs;
     const recentRecords = history?.filter((r) => r.timestamp.getTime() > cutoff) || [];
-    const recentUtilization = utilizationHistory?.filter((r) => r.timestamp.getTime() > cutoff) || [];
+    const recentUtilization =
+      utilizationHistory?.filter((r) => r.timestamp.getTime() > cutoff) || [];
 
     if (recentRecords.length === 0 && recentUtilization.length === 0) {
       return null;
@@ -115,8 +119,11 @@ export class OptimizationEngine {
     let avgMemoryUtilization = 0.5;
 
     if (recentUtilization.length > 0) {
-      avgCPUUtilization = recentUtilization.reduce((sum, r) => sum + r.cpuUtilization, 0) / recentUtilization.length;
-      avgMemoryUtilization = recentUtilization.reduce((sum, r) => sum + r.memoryUtilization, 0) / recentUtilization.length;
+      avgCPUUtilization =
+        recentUtilization.reduce((sum, r) => sum + r.cpuUtilization, 0) / recentUtilization.length;
+      avgMemoryUtilization =
+        recentUtilization.reduce((sum, r) => sum + r.memoryUtilization, 0) /
+        recentUtilization.length;
     }
 
     return {
@@ -263,12 +270,18 @@ export class OptimizationEngine {
       return null;
     }
 
-    const avgHighTrafficInvocations = highTrafficPeriods.length > 0
-      ? highTrafficPeriods.reduce((sum, p) => sum + p.avgInvocations, 0) / highTrafficPeriods.length
-      : 0;
-    const avgLowTrafficInvocations = lowTrafficPeriods.reduce((sum, p) => sum + p.avgInvocations, 0) / lowTrafficPeriods.length;
+    const avgHighTrafficInvocations =
+      highTrafficPeriods.length > 0
+        ? highTrafficPeriods.reduce((sum, p) => sum + p.avgInvocations, 0) /
+          highTrafficPeriods.length
+        : 0;
+    const avgLowTrafficInvocations =
+      lowTrafficPeriods.reduce((sum, p) => sum + p.avgInvocations, 0) / lowTrafficPeriods.length;
 
-    if (avgHighTrafficInvocations === 0 || avgLowTrafficInvocations >= avgHighTrafficInvocations * 0.5) {
+    if (
+      avgHighTrafficInvocations === 0 ||
+      avgLowTrafficInvocations >= avgHighTrafficInvocations * 0.5
+    ) {
       return null;
     }
 
@@ -283,12 +296,17 @@ export class OptimizationEngine {
     const currentCost = this.estimateMonthlyCost(functionDef);
     const offPeakHoursPerDay = lowTrafficPeriods.length;
 
-    const savingsPerDay = (peakMinSize - offPeakMinSize) * (this.config.costPerPodHour ?? 0.05) * (offPeakHoursPerDay / 24);
+    const savingsPerDay =
+      (peakMinSize - offPeakMinSize) *
+      (this.config.costPerPodHour ?? 0.05) *
+      (offPeakHoursPerDay / 24);
     const monthlySavings = savingsPerDay * 30;
 
     const projectedCost = currentCost - monthlySavings;
 
-    const lowestTrafficHour = lowTrafficPeriods.sort((a, b) => a.avgInvocations - b.avgInvocations)[0];
+    const lowestTrafficHour = lowTrafficPeriods.sort(
+      (a, b) => a.avgInvocations - b.avgInvocations,
+    )[0];
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
     return {
@@ -303,7 +321,8 @@ export class OptimizationEngine {
   }
 
   private detectSchedulePatterns(records: CostRecord[]): SchedulePattern[] {
-    const hourlyData: Map<string, { count: number; totalDuration: number; dayOfWeek: number }> = new Map();
+    const hourlyData: Map<string, { count: number; totalDuration: number; dayOfWeek: number }> =
+      new Map();
 
     for (const record of records) {
       const date = new Date(record.timestamp);
@@ -317,9 +336,11 @@ export class OptimizationEngine {
       hourlyData.set(key, existing);
     }
 
-    const timeSpanMs = records.length > 1
-      ? new Date(records[records.length - 1].timestamp).getTime() - new Date(records[0].timestamp).getTime()
-      : 0;
+    const timeSpanMs =
+      records.length > 1
+        ? new Date(records[records.length - 1].timestamp).getTime() -
+          new Date(records[0].timestamp).getTime()
+        : 0;
     const numWeeks = timeSpanMs > 0 ? timeSpanMs / (7 * 24 * 60 * 60 * 1000) : 1;
 
     let globalAvgInvocations = 0;

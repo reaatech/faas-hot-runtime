@@ -83,7 +83,11 @@ export class BudgetManager {
       }
       if (!this.config.hardLimit && monthlyRatio >= 0.9) {
         logger.warn(
-          { monthly_spent: newMonthlySpent, monthly_limit: this.config.monthlyLimit, ratio: monthlyRatio },
+          {
+            monthly_spent: newMonthlySpent,
+            monthly_limit: this.config.monthlyLimit,
+            ratio: monthlyRatio,
+          },
           'Budget exceeds 90% of monthly limit',
         );
       }
@@ -94,7 +98,10 @@ export class BudgetManager {
 
     const currentBudget = this.functionBudgets.get(functionName);
     const currentFunctionSpend = currentBudget?.spent ?? 0;
-    this.functionBudgets.set(functionName, { limit: currentBudget?.limit, spent: currentFunctionSpend + costUsd });
+    this.functionBudgets.set(functionName, {
+      limit: currentBudget?.limit,
+      spent: currentFunctionSpend + costUsd,
+    });
 
     if (this.config.dailyLimit > 0) {
       const actualDailyRatio = this.state.dailySpent / this.config.dailyLimit;
@@ -158,12 +165,18 @@ export class BudgetManager {
    */
   getBudgetStatus(): {
     daily: { spent: number; limit: number; remaining: number; ratio: number };
-    monthly: { spent: number; limit: number | undefined; remaining: number | undefined; ratio: number | undefined };
+    monthly: {
+      spent: number;
+      limit: number | undefined;
+      remaining: number | undefined;
+      ratio: number | undefined;
+    };
   } {
     this.checkDailyReset();
     this.checkMonthlyReset();
 
-    const dailyRatio = this.config.dailyLimit > 0 ? this.state.dailySpent / this.config.dailyLimit : 0;
+    const dailyRatio =
+      this.config.dailyLimit > 0 ? this.state.dailySpent / this.config.dailyLimit : 0;
 
     return {
       daily: {
@@ -175,8 +188,12 @@ export class BudgetManager {
       monthly: {
         spent: this.state.monthlySpent,
         limit: this.config.monthlyLimit,
-        remaining: this.config.monthlyLimit ? Math.max(0, this.config.monthlyLimit - this.state.monthlySpent) : undefined,
-        ratio: this.config.monthlyLimit ? this.state.monthlySpent / this.config.monthlyLimit : undefined,
+        remaining: this.config.monthlyLimit
+          ? Math.max(0, this.config.monthlyLimit - this.state.monthlySpent)
+          : undefined,
+        ratio: this.config.monthlyLimit
+          ? this.state.monthlySpent / this.config.monthlyLimit
+          : undefined,
       },
     };
   }

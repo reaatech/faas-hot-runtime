@@ -4,10 +4,20 @@ import { EventEmitter } from 'node:events';
 import { InvokerEngine } from '../../../src/invoker/invoker-engine.js';
 import type { PoolManager } from '../../../src/pool-manager/pool-manager.js';
 import type { FunctionRegistry } from '../../../src/registry/function-registry.js';
-import type { InvocationRequest, FunctionDefinition, InvocationResult } from '../../../src/types/index.js';
+import type {
+  InvocationRequest,
+  FunctionDefinition,
+  InvocationResult,
+} from '../../../src/types/index.js';
 
 interface PrivateInvokerEngine {
-  createErrorResult(errorType: string, errorMessage: string, startTime: number, functionName: string, podId: string): InvocationResult;
+  createErrorResult(
+    errorType: string,
+    errorMessage: string,
+    startTime: number,
+    functionName: string,
+    podId: string,
+  ): InvocationResult;
 }
 
 // Mock the logger
@@ -29,11 +39,24 @@ describe('InvokerEngine', () => {
     name,
     description: 'Test function',
     version: '1.0.0',
-    container: { image: 'test:latest', port: 8080, resources: { cpu: '100m', memory: '128Mi', gpu: 0 } },
+    container: {
+      image: 'test:latest',
+      port: 8080,
+      resources: { cpu: '100m', memory: '128Mi', gpu: 0 },
+    },
     pool: { min_size: 1, max_size: 5, target_utilization: 0.7, warm_up_time_seconds: 30 },
     triggers: [{ type: 'http', path: `/${name}`, methods: ['POST'] }],
-    mcp: { enabled: true, tool_name: name.replace(/-/g, '_'), description: 'Test', input_schema: { type: 'object', properties: {} } },
-    cost: { budget_daily: 10, cost_per_invocation_estimate: 0.0001, alert_thresholds: [0.5, 0.75, 0.9] },
+    mcp: {
+      enabled: true,
+      tool_name: name.replace(/-/g, '_'),
+      description: 'Test',
+      input_schema: { type: 'object', properties: {} },
+    },
+    cost: {
+      budget_daily: 10,
+      cost_per_invocation_estimate: 0.0001,
+      alert_thresholds: [0.5, 0.75, 0.9],
+    },
     observability: { tracing_enabled: true, metrics_enabled: true, log_level: 'info' },
   });
 
@@ -250,13 +273,12 @@ describe('InvokerEngine', () => {
       statusCode = 200,
       timeout = false,
     }: MockHttpRequestConfig): void => {
-      vi.spyOn(http, 'request').mockImplementation(((
-        ...args: unknown[]
-      ) => {
+      vi.spyOn(http, 'request').mockImplementation(((...args: unknown[]) => {
         const options = args[0];
-        const callback = typeof args.at(-1) === 'function'
-          ? (args.at(-1) as (res: http.IncomingMessage) => void)
-          : undefined;
+        const callback =
+          typeof args.at(-1) === 'function'
+            ? (args.at(-1) as (res: http.IncomingMessage) => void)
+            : undefined;
         const req = new EventEmitter() as http.ClientRequest;
         const res = new EventEmitter() as http.IncomingMessage;
 
@@ -308,7 +330,11 @@ describe('InvokerEngine', () => {
       expect(result.metadata?.cost_breakdown).toBeDefined();
       expect(result.metadata?.cost_breakdown?.compute).toBeGreaterThan(0);
       expect(result.metadata?.cost_breakdown?.network).toBeGreaterThan(0);
-      expect(mockPoolManager.releasePod).toHaveBeenCalledWith('test-function', 'test-pod-200', expect.any(Number));
+      expect(mockPoolManager.releasePod).toHaveBeenCalledWith(
+        'test-function',
+        'test-pod-200',
+        expect.any(Number),
+      );
     });
 
     it('should handle HTTP non-200 error response', async () => {
@@ -372,7 +398,9 @@ describe('InvokerEngine', () => {
       mockHttpRequest({ error: new Error('connect ECONNREFUSED') });
 
       const funcDef = { ...func, container: { ...func.container, port: 8080 } };
-      vi.mocked(mockFunctionRegistry.getFunction).mockReturnValue(funcDef as unknown as FunctionDefinition);
+      vi.mocked(mockFunctionRegistry.getFunction).mockReturnValue(
+        funcDef as unknown as FunctionDefinition,
+      );
       vi.mocked(mockPoolManager.selectPod).mockResolvedValue('test-pod-conn-err');
       vi.mocked(mockPoolManager.releasePod).mockResolvedValue(undefined);
 
@@ -435,7 +463,13 @@ describe('InvokerEngine', () => {
       const functionName = 'test-func';
       const podId = 'test-pod';
 
-      const result = (invokerEngine as unknown as PrivateInvokerEngine).createErrorResult(errorType, errorMessage, startTime, functionName, podId);
+      const result = (invokerEngine as unknown as PrivateInvokerEngine).createErrorResult(
+        errorType,
+        errorMessage,
+        startTime,
+        functionName,
+        podId,
+      );
 
       expect(result.success).toBe(false);
       expect(result.error?.error_type).toBe(errorType);
@@ -448,7 +482,13 @@ describe('InvokerEngine', () => {
     it('should handle unknown error types', () => {
       const startTime = Date.now() - 50;
 
-      const result = (invokerEngine as unknown as PrivateInvokerEngine).createErrorResult('UnknownError', 'Something went wrong', startTime, 'func', 'pod');
+      const result = (invokerEngine as unknown as PrivateInvokerEngine).createErrorResult(
+        'UnknownError',
+        'Something went wrong',
+        startTime,
+        'func',
+        'pod',
+      );
 
       expect(result.success).toBe(false);
       expect(result.error?.error_type).toBe('UnknownError');

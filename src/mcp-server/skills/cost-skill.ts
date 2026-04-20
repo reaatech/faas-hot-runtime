@@ -164,14 +164,23 @@ export class CostSkillHandler {
       result.function = args['function'];
     }
     if (args['range'] !== undefined) {
-      if (typeof args['range'] !== 'string' || !['1h', '24h', '7d', '30d'].includes(args['range'])) {
+      if (
+        typeof args['range'] !== 'string' ||
+        !['1h', '24h', '7d', '30d'].includes(args['range'])
+      ) {
         throw new McpError(ErrorCode.InvalidParams, 'range must be one of: 1h, 24h, 7d, 30d');
       }
       result.range = args['range'] as '1h' | '24h' | '7d' | '30d';
     }
     if (args['granularity'] !== undefined) {
-      if (typeof args['granularity'] !== 'string' || !['hourly', 'daily', 'monthly'].includes(args['granularity'])) {
-        throw new McpError(ErrorCode.InvalidParams, 'granularity must be one of: hourly, daily, monthly');
+      if (
+        typeof args['granularity'] !== 'string' ||
+        !['hourly', 'daily', 'monthly'].includes(args['granularity'])
+      ) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          'granularity must be one of: hourly, daily, monthly',
+        );
       }
       result.granularity = args['granularity'] as 'hourly' | 'daily' | 'monthly';
     }
@@ -194,7 +203,10 @@ export class CostSkillHandler {
       throw new McpError(ErrorCode.InvalidParams, 'function is required and must be a string');
     }
     if (typeof args['daily_limit'] !== 'number' || args['daily_limit'] <= 0) {
-      throw new McpError(ErrorCode.InvalidParams, 'daily_limit is required and must be a positive number');
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        'daily_limit is required and must be a positive number',
+      );
     }
     const result: UpdateBudgetParams = {
       function: args['function'],
@@ -235,7 +247,9 @@ export class CostSkillHandler {
     return result;
   }
 
-  private async getCostReport(params: GetCostReportParams): Promise<{ content: Array<{ type: string; text: string }> }> {
+  private async getCostReport(
+    params: GetCostReportParams,
+  ): Promise<{ content: Array<{ type: string; text: string }> }> {
     const now = new Date();
     let startDate: Date;
 
@@ -267,7 +281,9 @@ export class CostSkillHandler {
     };
   }
 
-  private async getBudgetStatus(params: GetBudgetStatusParams): Promise<{ content: Array<{ type: string; text: string }> }> {
+  private async getBudgetStatus(
+    params: GetBudgetStatusParams,
+  ): Promise<{ content: Array<{ type: string; text: string }> }> {
     if (params.function) {
       const functionBudget = this.budgetManager.getFunctionBudget(params.function);
       const status = this.budgetManager.getBudgetStatus();
@@ -296,7 +312,9 @@ export class CostSkillHandler {
     };
   }
 
-  private async updateBudget(params: UpdateBudgetParams): Promise<{ content: Array<{ type: string; text: string }> }> {
+  private async updateBudget(
+    params: UpdateBudgetParams,
+  ): Promise<{ content: Array<{ type: string; text: string }> }> {
     if (this.functionRegistry && !this.functionRegistry.hasFunction(params.function)) {
       throw new McpError(ErrorCode.InvalidParams, `Function not found: ${params.function}`);
     }
@@ -316,7 +334,9 @@ export class CostSkillHandler {
     return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
   }
 
-  private async estimateCost(params: EstimateCostParams): Promise<{ content: Array<{ type: string; text: string }> }> {
+  private async estimateCost(
+    params: EstimateCostParams,
+  ): Promise<{ content: Array<{ type: string; text: string }> }> {
     const functionDef = this.getFunctionDefinition(params.function);
     if (!functionDef) {
       throw new McpError(ErrorCode.InvalidParams, `Function not found: ${params.function}`);
@@ -332,7 +352,7 @@ export class CostSkillHandler {
     const cpuMs = cpu * durationMs;
     const memoryMs = memory * durationMs;
     const computeCost = cpuMs * cpuCostPerMs + memoryMs * memoryCostPerMs;
-    const networkCost = (params.input_size ?? 1024) / (1024 * 1024) * 0.01;
+    const networkCost = ((params.input_size ?? 1024) / (1024 * 1024)) * 0.01;
     const totalCost = computeCost + networkCost;
 
     const result = {

@@ -1,7 +1,17 @@
-import { createServer, type Server as HTTPServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import {
+  createServer,
+  type Server as HTTPServer,
+  type IncomingMessage,
+  type ServerResponse,
+} from 'node:http';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { logger } from '../observability/logger.js';
-import type { FunctionDefinition, InvocationRequest, InvocationResult, HTTPTriggerConfig as DomainHTTPTriggerConfig } from '../types/index.js';
+import type {
+  FunctionDefinition,
+  InvocationRequest,
+  InvocationResult,
+  HTTPTriggerConfig as DomainHTTPTriggerConfig,
+} from '../types/index.js';
 
 export interface HTTPTriggerServerConfig {
   host: string;
@@ -35,7 +45,9 @@ export class HTTPTrigger {
     this.maxBodySizeBytes = config.maxBodySizeBytes ?? 1024 * 1024;
     this.requestTimeoutMs = config.requestTimeoutMs ?? 30000;
     this.corsOrigin = config.corsOrigin ?? '';
-    this.apiKeyHash = config.apiKey ? createHash('sha256').update(config.apiKey).digest() : undefined;
+    this.apiKeyHash = config.apiKey
+      ? createHash('sha256').update(config.apiKey).digest()
+      : undefined;
   }
 
   /**
@@ -100,7 +112,9 @@ export class HTTPTrigger {
       return;
     }
 
-    const httpTrigger = functionDef.triggers.find((t): t is DomainHTTPTriggerConfig => t.type === 'http');
+    const httpTrigger = functionDef.triggers.find(
+      (t): t is DomainHTTPTriggerConfig => t.type === 'http',
+    );
     if (httpTrigger?.auth_required) {
       const apiKey = req.headers['x-api-key'];
       if (!this.validateApiKey(apiKey)) {
@@ -139,20 +153,25 @@ export class HTTPTrigger {
       timeoutId = setTimeout(() => reject(new Error('Request timeout')), this.requestTimeoutMs);
     });
 
-    const result = await Promise.race([
-      handler.handleRequest(request),
-      timeoutPromise,
-    ]).catch((error) => {
-      logger.error({ error: error.message }, 'Request timeout');
-      return {
-        success: false,
-        content: [{ type: 'text', text: 'Request timeout' }],
-        metadata: { function: functionDef.name, pod: 'unknown', duration_ms: 0, cost_usd: 0, cold_start: false },
-        error: { error_type: 'Timeout', error_message: error.message },
-      } as InvocationResult;
-    }).finally(() => {
-      if (timeoutId) clearTimeout(timeoutId);
-    });
+    const result = await Promise.race([handler.handleRequest(request), timeoutPromise])
+      .catch((error) => {
+        logger.error({ error: error.message }, 'Request timeout');
+        return {
+          success: false,
+          content: [{ type: 'text', text: 'Request timeout' }],
+          metadata: {
+            function: functionDef.name,
+            pod: 'unknown',
+            duration_ms: 0,
+            cost_usd: 0,
+            cold_start: false,
+          },
+          error: { error_type: 'Timeout', error_message: error.message },
+        } as InvocationResult;
+      })
+      .finally(() => {
+        if (timeoutId) clearTimeout(timeoutId);
+      });
 
     res.writeHead(result.success ? 200 : 500, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(result));
@@ -178,7 +197,10 @@ export class HTTPTrigger {
   /**
    * Parse request body
    */
-private async parseBody(req: IncomingMessage, res: ServerResponse): Promise<Record<string, unknown> | null> {
+  private async parseBody(
+    req: IncomingMessage,
+    res: ServerResponse,
+  ): Promise<Record<string, unknown> | null> {
     return new Promise((resolve) => {
       let body = '';
       let size = 0;
@@ -202,10 +224,10 @@ private async parseBody(req: IncomingMessage, res: ServerResponse): Promise<Reco
 
       req.on('data', (chunk) => {
         size += chunk.length;
-      if (size > this.maxBodySizeBytes) {
-            logger.warn({ size }, 'HTTP request body exceeded size limit');
-            req.destroy();
-            rejectRequest(413, 'Request body too large');
+        if (size > this.maxBodySizeBytes) {
+          logger.warn({ size }, 'HTTP request body exceeded size limit');
+          req.destroy();
+          rejectRequest(413, 'Request body too large');
           return;
         }
         body += chunk;
@@ -270,6 +292,9 @@ private async parseBody(req: IncomingMessage, res: ServerResponse): Promise<Reco
     }
 
     const candidateHash = createHash('sha256').update(candidate).digest();
-    return candidateHash.length === this.apiKeyHash.length && timingSafeEqual(candidateHash, this.apiKeyHash);
+    return (
+      candidateHash.length === this.apiKeyHash.length &&
+      timingSafeEqual(candidateHash, this.apiKeyHash)
+    );
   }
 }

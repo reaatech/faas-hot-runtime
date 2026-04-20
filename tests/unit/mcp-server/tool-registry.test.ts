@@ -33,7 +33,11 @@ describe('ToolRegistry', () => {
         required: ['name'],
       },
     },
-    cost: { budget_daily: 10, cost_per_invocation_estimate: 0.0001, alert_thresholds: [0.5, 0.75, 0.9] },
+    cost: {
+      budget_daily: 10,
+      cost_per_invocation_estimate: 0.0001,
+      alert_thresholds: [0.5, 0.75, 0.9],
+    },
     observability: { tracing_enabled: true, metrics_enabled: true, log_level: 'info' },
   };
 
@@ -95,8 +99,16 @@ describe('ToolRegistry', () => {
 
   describe('listTools', () => {
     it('should return all registered tools', () => {
-      const func2 = { ...mockFunction, name: 'func-2', mcp: { ...mockFunction.mcp, tool_name: 'func_2' } };
-      const func3 = { ...mockFunction, name: 'func-3', mcp: { ...mockFunction.mcp, tool_name: 'func_3' } };
+      const func2 = {
+        ...mockFunction,
+        name: 'func-2',
+        mcp: { ...mockFunction.mcp, tool_name: 'func_2' },
+      };
+      const func3 = {
+        ...mockFunction,
+        name: 'func-3',
+        mcp: { ...mockFunction.mcp, tool_name: 'func_3' },
+      };
 
       toolRegistry.registerTool(mockFunction);
       toolRegistry.registerTool(func2);

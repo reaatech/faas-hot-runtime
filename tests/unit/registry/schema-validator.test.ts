@@ -15,8 +15,17 @@ describe('SchemaValidator', () => {
     },
     pool: { min_size: 1, max_size: 5, target_utilization: 0.7, warm_up_time_seconds: 30 },
     triggers: [{ type: 'http' as const, path: '/test', methods: ['POST'] }],
-    mcp: { enabled: false, tool_name: 'test', description: 'test', input_schema: { type: 'object', properties: {} } },
-    cost: { budget_daily: 10, cost_per_invocation_estimate: 0.0001, alert_thresholds: [0.5, 0.75, 0.9] },
+    mcp: {
+      enabled: false,
+      tool_name: 'test',
+      description: 'test',
+      input_schema: { type: 'object', properties: {} },
+    },
+    cost: {
+      budget_daily: 10,
+      cost_per_invocation_estimate: 0.0001,
+      alert_thresholds: [0.5, 0.75, 0.9],
+    },
     observability: { tracing_enabled: true, metrics_enabled: true, log_level: 'info' },
   };
 

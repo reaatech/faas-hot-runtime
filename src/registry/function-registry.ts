@@ -39,7 +39,9 @@ export class FunctionRegistry {
     try {
       await fs.promises.access(this.config.configDir, fs.constants.R_OK);
     } catch {
-      throw new Error(`Function config directory does not exist or is not readable: ${this.config.configDir}`);
+      throw new Error(
+        `Function config directory does not exist or is not readable: ${this.config.configDir}`,
+      );
     }
 
     await this.loadAllFunctions();
@@ -73,16 +75,17 @@ export class FunctionRegistry {
       const validated = FunctionDefinitionSchema.parse(data);
 
       if (this.functions.has(validated.name)) {
-        logger.warn(
-          { name: validated.name, file: filePath },
-          'Duplicate function name, skipping',
-        );
+        logger.warn({ name: validated.name, file: filePath }, 'Duplicate function name, skipping');
         return;
       }
 
       if (this.mcpToolNames.has(validated.mcp.tool_name)) {
         logger.warn(
-          { tool_name: validated.mcp.tool_name, file: filePath, existing_function: this.mcpToolNames.get(validated.mcp.tool_name) },
+          {
+            tool_name: validated.mcp.tool_name,
+            file: filePath,
+            existing_function: this.mcpToolNames.get(validated.mcp.tool_name),
+          },
           'Duplicate MCP tool name, skipping',
         );
         return;

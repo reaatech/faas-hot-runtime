@@ -1,16 +1,7 @@
-import {
-  MeterProvider,
-  PeriodicExportingMetricReader,
-} from '@opentelemetry/sdk-metrics';
+import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
-import type {
-  Counter,
-  Histogram,
-  ObservableResult,
-} from '@opentelemetry/api';
-import {
-  metrics,
-} from '@opentelemetry/api';
+import type { Counter, Histogram, ObservableResult } from '@opentelemetry/api';
+import { metrics } from '@opentelemetry/api';
 import { logger } from './logger.js';
 
 let metricProvider: MeterProvider | null = null;
@@ -126,10 +117,7 @@ export function recordInvocation(
   costTotal.add(costUsd, { function: functionName });
 }
 
-export function recordError(
-  functionName: string,
-  errorType: string,
-): void {
+export function recordError(functionName: string, errorType: string): void {
   if (!errorsTotal) return;
   errorsTotal.add(1, { function: functionName, error_type: errorType });
 }

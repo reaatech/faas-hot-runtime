@@ -9,11 +9,24 @@ describe('FunctionDiscovery', () => {
     name: 'http-function',
     description: 'HTTP triggered function',
     version: '1.0.0',
-    container: { image: 'test:latest', port: 8080, resources: { cpu: '100m', memory: '128Mi', gpu: 0 } },
+    container: {
+      image: 'test:latest',
+      port: 8080,
+      resources: { cpu: '100m', memory: '128Mi', gpu: 0 },
+    },
     pool: { min_size: 1, max_size: 5, target_utilization: 0.7, warm_up_time_seconds: 30 },
     triggers: [{ type: 'http', path: '/http-func', methods: ['POST'] }],
-    mcp: { enabled: true, tool_name: 'http_func', description: 'HTTP function for testing', input_schema: { type: 'object', properties: {} } },
-    cost: { budget_daily: 10, cost_per_invocation_estimate: 0.0001, alert_thresholds: [0.5, 0.75, 0.9] },
+    mcp: {
+      enabled: true,
+      tool_name: 'http_func',
+      description: 'HTTP function for testing',
+      input_schema: { type: 'object', properties: {} },
+    },
+    cost: {
+      budget_daily: 10,
+      cost_per_invocation_estimate: 0.0001,
+      alert_thresholds: [0.5, 0.75, 0.9],
+    },
     observability: { tracing_enabled: true, metrics_enabled: true, log_level: 'info' },
   };
 
@@ -21,11 +34,26 @@ describe('FunctionDiscovery', () => {
     name: 'sqs-function',
     description: 'SQS triggered function',
     version: '1.0.0',
-    container: { image: 'test:latest', port: 8080, resources: { cpu: '100m', memory: '128Mi', gpu: 0 } },
+    container: {
+      image: 'test:latest',
+      port: 8080,
+      resources: { cpu: '100m', memory: '128Mi', gpu: 0 },
+    },
     pool: { min_size: 1, max_size: 5, target_utilization: 0.7, warm_up_time_seconds: 30 },
-    triggers: [{ type: 'sqs', queue: 'test-queue', batch_size: 10, visibility_timeout_seconds: 300 }],
-    mcp: { enabled: false, tool_name: 'sqs_func', description: 'SQS function', input_schema: { type: 'object', properties: {} } },
-    cost: { budget_daily: 10, cost_per_invocation_estimate: 0.0001, alert_thresholds: [0.5, 0.75, 0.9] },
+    triggers: [
+      { type: 'sqs', queue: 'test-queue', batch_size: 10, visibility_timeout_seconds: 300 },
+    ],
+    mcp: {
+      enabled: false,
+      tool_name: 'sqs_func',
+      description: 'SQS function',
+      input_schema: { type: 'object', properties: {} },
+    },
+    cost: {
+      budget_daily: 10,
+      cost_per_invocation_estimate: 0.0001,
+      alert_thresholds: [0.5, 0.75, 0.9],
+    },
     observability: { tracing_enabled: true, metrics_enabled: true, log_level: 'info' },
   };
 
@@ -76,7 +104,10 @@ describe('FunctionDiscovery', () => {
   describe('generateOpenAPISpec', () => {
     it('should generate OpenAPI spec for HTTP functions', () => {
       discovery.register(httpFunction);
-      const spec = discovery.generateOpenAPISpec() as { paths: Record<string, unknown>; openapi: string };
+      const spec = discovery.generateOpenAPISpec() as {
+        paths: Record<string, unknown>;
+        openapi: string;
+      };
       expect(spec.openapi).toBe('3.0.0');
       expect(spec.paths).toHaveProperty('/http-func');
       expect(spec.paths['/http-func']).toHaveProperty('post');

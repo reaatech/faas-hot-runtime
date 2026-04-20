@@ -32,8 +32,12 @@ describe('RequestRouter', () => {
   describe('constructor', () => {
     it('should use default config', () => {
       const defaultRouter = new RequestRouter();
-      expect((defaultRouter as unknown as { config: RequestRouteConfig }).config.strategy).toBe('round-robin');
-      expect((defaultRouter as unknown as { config: RequestRouteConfig }).config.stickySessionTTLMs).toBe(300000);
+      expect((defaultRouter as unknown as { config: RequestRouteConfig }).config.strategy).toBe(
+        'round-robin',
+      );
+      expect(
+        (defaultRouter as unknown as { config: RequestRouteConfig }).config.stickySessionTTLMs,
+      ).toBe(300000);
     });
 
     it('should accept custom config', () => {
@@ -42,8 +46,12 @@ describe('RequestRouter', () => {
         stickySessionTTLMs: 600000,
         maxRetries: 5,
       });
-      expect((customRouter as unknown as { config: RequestRouteConfig }).config.strategy).toBe('least-loaded');
-      expect((customRouter as unknown as { config: RequestRouteConfig }).config.stickySessionTTLMs).toBe(600000);
+      expect((customRouter as unknown as { config: RequestRouteConfig }).config.strategy).toBe(
+        'least-loaded',
+      );
+      expect(
+        (customRouter as unknown as { config: RequestRouteConfig }).config.stickySessionTTLMs,
+      ).toBe(600000);
     });
   });
 
@@ -101,8 +109,13 @@ describe('RequestRouter', () => {
 
   describe('selectFallbackPod', () => {
     it('should throw when no fallback pods', () => {
-      expect(() => router.selectFallbackPod('func', [{ pod_id: 'pod-1', active_invocations: 1, recent_latency_ms: 50 }], 'pod-1'))
-        .toThrow('No available fallback pods');
+      expect(() =>
+        router.selectFallbackPod(
+          'func',
+          [{ pod_id: 'pod-1', active_invocations: 1, recent_latency_ms: 50 }],
+          'pod-1',
+        ),
+      ).toThrow('No available fallback pods');
     });
 
     it('should select least loaded from available pods', () => {
@@ -151,7 +164,7 @@ describe('RequestRouter', () => {
       const stickyRouter = new RequestRouter({ strategy: 'sticky', stickySessionTTLMs: 1 });
       stickyRouter.selectPod('func', mockPods, 'req-1');
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const cleaned = stickyRouter.cleanupExpiredSessions();
       expect(cleaned).toBe(1);

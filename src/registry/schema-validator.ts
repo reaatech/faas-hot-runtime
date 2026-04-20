@@ -51,10 +51,14 @@ export class SchemaValidator {
 
     // Validate container resources
     if (!this.isValidCPU(functionDef.container.resources.cpu)) {
-      errors.push(`Invalid CPU resource format: "${functionDef.container.resources.cpu}". Expected format like "250m" or "0.5"`);
+      errors.push(
+        `Invalid CPU resource format: "${functionDef.container.resources.cpu}". Expected format like "250m" or "0.5"`,
+      );
     }
     if (!this.isValidMemory(functionDef.container.resources.memory)) {
-      errors.push(`Invalid memory resource format: "${functionDef.container.resources.memory}". Expected format like "128Mi" or "1Gi"`);
+      errors.push(
+        `Invalid memory resource format: "${functionDef.container.resources.memory}". Expected format like "128Mi" or "1Gi"`,
+      );
     }
 
     // Validate triggers

@@ -25,8 +25,13 @@ describe('ResponseHandler', () => {
   describe('constructor', () => {
     it('should use default config', () => {
       const defaultHandler = new ResponseHandler();
-      expect((defaultHandler as unknown as { config: ResponseHandlerConfig }).config.maxResponseSizeBytes).toBe(10 * 1024 * 1024);
-      expect((defaultHandler as unknown as { config: ResponseHandlerConfig }).config.enableCaching).toBe(false);
+      expect(
+        (defaultHandler as unknown as { config: ResponseHandlerConfig }).config
+          .maxResponseSizeBytes,
+      ).toBe(10 * 1024 * 1024);
+      expect(
+        (defaultHandler as unknown as { config: ResponseHandlerConfig }).config.enableCaching,
+      ).toBe(false);
     });
 
     it('should accept custom config', () => {
@@ -35,8 +40,12 @@ describe('ResponseHandler', () => {
         enableCaching: true,
         cacheTTLMs: 30000,
       });
-      expect((customHandler as unknown as { config: ResponseHandlerConfig }).config.maxResponseSizeBytes).toBe(5 * 1024 * 1024);
-      expect((customHandler as unknown as { config: ResponseHandlerConfig }).config.enableCaching).toBe(true);
+      expect(
+        (customHandler as unknown as { config: ResponseHandlerConfig }).config.maxResponseSizeBytes,
+      ).toBe(5 * 1024 * 1024);
+      expect(
+        (customHandler as unknown as { config: ResponseHandlerConfig }).config.enableCaching,
+      ).toBe(true);
     });
   });
 
@@ -67,13 +76,7 @@ describe('ResponseHandler', () => {
     });
 
     it('should handle malformed JSON as text', () => {
-      const result = handler.parseResponse(
-        { name: 'test-func' },
-        'pod-1',
-        200,
-        'not json',
-        100,
-      );
+      const result = handler.parseResponse({ name: 'test-func' }, 'pod-1', 200, 'not json', 100);
 
       expect(result.success).toBe(true);
       expect((result.content[0] as { type: 'text'; text: string }).text).toBe('not json');
@@ -94,26 +97,14 @@ describe('ResponseHandler', () => {
     });
 
     it('should parse 404 error', () => {
-      const result = handler.parseResponse(
-        { name: 'test-func' },
-        'pod-1',
-        404,
-        'Not Found',
-        100,
-      );
+      const result = handler.parseResponse({ name: 'test-func' }, 'pod-1', 404, 'Not Found', 100);
 
       expect(result.success).toBe(false);
       expect(result.error?.error_type).toBe('HTTP_404');
     });
 
     it('should include metadata', () => {
-      const result = handler.parseResponse(
-        { name: 'test-func' },
-        'pod-1',
-        200,
-        '{}',
-        150,
-      );
+      const result = handler.parseResponse({ name: 'test-func' }, 'pod-1', 200, '{}', 150);
 
       expect(result.metadata?.function).toBe('test-func');
       expect(result.metadata?.pod).toBe('pod-1');
@@ -163,7 +154,7 @@ describe('ResponseHandler', () => {
 
       shortTTLHandler.cacheResponse('key', [{ type: 'text', text: 'cached' }]);
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const result = shortTTLHandler.getCachedResponse('key');
       expect(result).toBeUndefined();
@@ -234,7 +225,15 @@ describe('ResponseHandler', () => {
       const onComplete = vi.fn();
       const onError = vi.fn();
 
-      await handler.streamResponse('localhost', 9999, 'test-func', 'req-1', onChunk, onComplete, onError);
+      await handler.streamResponse(
+        'localhost',
+        9999,
+        'test-func',
+        'req-1',
+        onChunk,
+        onComplete,
+        onError,
+      );
 
       expect(onError).toHaveBeenCalled();
       expect(onChunk).not.toHaveBeenCalled();
@@ -246,7 +245,15 @@ describe('ResponseHandler', () => {
       const onComplete = vi.fn();
       const onError = vi.fn();
 
-      await handler.streamResponse('127.0.0.1', 65432, 'test-func', 'req-123', onChunk, onComplete, onError);
+      await handler.streamResponse(
+        '127.0.0.1',
+        65432,
+        'test-func',
+        'req-123',
+        onChunk,
+        onComplete,
+        onError,
+      );
 
       expect(onError).toHaveBeenCalledWith(expect.any(Error));
     });
@@ -258,7 +265,15 @@ describe('ResponseHandler', () => {
       const onComplete = vi.fn();
       const onError = vi.fn();
 
-      await handler.streamResponseFromPod('unreachable-pod', 9999, 'test-func', { key: 'value' }, onChunk, onComplete, onError);
+      await handler.streamResponseFromPod(
+        'unreachable-pod',
+        9999,
+        'test-func',
+        { key: 'value' },
+        onChunk,
+        onComplete,
+        onError,
+      );
 
       expect(onError).toHaveBeenCalled();
     });

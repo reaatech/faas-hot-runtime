@@ -29,8 +29,12 @@ describe('TimeoutManager', () => {
   describe('constructor', () => {
     it('should use default config', () => {
       const defaultManager = new TimeoutManager();
-      expect((defaultManager as unknown as { config: TimeoutConfig }).config.defaultTimeoutMs).toBe(30000);
-      expect((defaultManager as unknown as { config: TimeoutConfig }).config.maxTimeoutMs).toBe(300000);
+      expect((defaultManager as unknown as { config: TimeoutConfig }).config.defaultTimeoutMs).toBe(
+        30000,
+      );
+      expect((defaultManager as unknown as { config: TimeoutConfig }).config.maxTimeoutMs).toBe(
+        300000,
+      );
     });
 
     it('should accept custom config', () => {
@@ -39,28 +43,44 @@ describe('TimeoutManager', () => {
         maxTimeoutMs: 600000,
         cleanupIntervalMs: 500,
       });
-      expect((customManager as unknown as { config: TimeoutConfig }).config.defaultTimeoutMs).toBe(60000);
+      expect((customManager as unknown as { config: TimeoutConfig }).config.defaultTimeoutMs).toBe(
+        60000,
+      );
     });
   });
 
   describe('start/stop', () => {
     it('should start without error', () => {
       manager.start();
-      expect((manager as unknown as { cleanupInterval: ReturnType<typeof setInterval> | undefined }).cleanupInterval).toBeDefined();
+      expect(
+        (manager as unknown as { cleanupInterval: ReturnType<typeof setInterval> | undefined })
+          .cleanupInterval,
+      ).toBeDefined();
     });
 
     it('should not start twice', () => {
       manager.start();
-      const interval1 = (manager as unknown as { cleanupInterval: ReturnType<typeof setInterval> | undefined }).cleanupInterval;
+      const interval1 = (
+        manager as unknown as { cleanupInterval: ReturnType<typeof setInterval> | undefined }
+      ).cleanupInterval;
       manager.start();
-      expect((manager as unknown as { cleanupInterval: ReturnType<typeof setInterval> | undefined }).cleanupInterval).toBe(interval1);
+      expect(
+        (manager as unknown as { cleanupInterval: ReturnType<typeof setInterval> | undefined })
+          .cleanupInterval,
+      ).toBe(interval1);
     });
 
     it('should stop and cleanup', () => {
       manager.start();
       manager.stop();
-      expect((manager as unknown as { cleanupInterval: ReturnType<typeof setInterval> | undefined }).cleanupInterval).toBeUndefined();
-      expect((manager as unknown as { activeInvocations: Map<string, ActiveInvocation> }).activeInvocations.size).toBe(0);
+      expect(
+        (manager as unknown as { cleanupInterval: ReturnType<typeof setInterval> | undefined })
+          .cleanupInterval,
+      ).toBeUndefined();
+      expect(
+        (manager as unknown as { activeInvocations: Map<string, ActiveInvocation> })
+          .activeInvocations.size,
+      ).toBe(0);
     });
   });
 
@@ -96,7 +116,7 @@ describe('TimeoutManager', () => {
 
       manager.startInvocation('req-1', 'func-1', 'pod-1', 10, callback);
 
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(callback).toHaveBeenCalled();
     });
@@ -200,7 +220,7 @@ describe('TimeoutManager', () => {
 
       manager.startInvocation('req-1', 'func-1', 'pod-1', 10, callback);
 
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(manager.isInvocationActive('req-1')).toBe(false);
     });

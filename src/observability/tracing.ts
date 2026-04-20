@@ -2,7 +2,14 @@ import { NodeTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { trace, context, propagation, type Tracer, type Span, type Context } from '@opentelemetry/api';
+import {
+  trace,
+  context,
+  propagation,
+  type Tracer,
+  type Span,
+  type Context,
+} from '@opentelemetry/api';
 import { logger } from './logger.js';
 
 let tracerProvider: NodeTracerProvider | null = null;
@@ -53,10 +60,7 @@ export function getTracer(): Tracer {
   return tracer;
 }
 
-export function startInvocationSpan(
-  functionName: string,
-  requestId: string,
-): Span {
+export function startInvocationSpan(functionName: string, requestId: string): Span {
   const span = getTracer().startSpan('faas.invoke', {
     attributes: {
       'faas.function': functionName,
@@ -75,10 +79,7 @@ export function startPoolSelectionSpan(functionName: string): Span {
   });
 }
 
-export function startFunctionExecutionSpan(
-  functionName: string,
-  podId: string,
-): Span {
+export function startFunctionExecutionSpan(functionName: string, podId: string): Span {
   return getTracer().startSpan('function.execute', {
     attributes: {
       'faas.function': functionName,

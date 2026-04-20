@@ -14,9 +14,7 @@ import { InvokerEngine } from './invoker/invoker-engine.js';
 import { PoolManager } from './pool-manager/pool-manager.js';
 import { K8sClient } from './k8s/k8s-client.js';
 
-const pkg = JSON.parse(
-  fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf-8'),
-);
+const pkg = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf-8'));
 
 const program = new Command();
 
@@ -30,8 +28,16 @@ program
   .description('Start the FaaS runtime server')
   .option('-p, --port <number>', 'Port to listen on', (v) => parseInt(v, 10), 8080)
   .option('-h, --host <host>', 'Host to bind to', '127.0.0.1')
-  .option('-c, --config-dir <dir>', 'Directory containing function definitions', './config/functions')
-  .option('--api-key <key>', 'API key for authentication', process.env.FAAS_API_KEY ?? 'dev-api-key')
+  .option(
+    '-c, --config-dir <dir>',
+    'Directory containing function definitions',
+    './config/functions',
+  )
+  .option(
+    '--api-key <key>',
+    'API key for authentication',
+    process.env.FAAS_API_KEY ?? 'dev-api-key',
+  )
   .action(async (options) => {
     const registry = new FunctionRegistry({
       configDir: options.configDir,
@@ -58,15 +64,18 @@ program
     });
     await k8sClient.initialize();
 
-    const poolManager = new PoolManager({
-      defaultMinSize: 2,
-      defaultMaxSize: 10,
-      defaultTargetUtilization: 0.7,
-      healthCheckIntervalMs: 30000,
-      scaleUpThreshold: 0.8,
-      scaleDownThreshold: 0.3,
-      scalingCooldownSeconds: 60,
-    }, k8sClient);
+    const poolManager = new PoolManager(
+      {
+        defaultMinSize: 2,
+        defaultMaxSize: 10,
+        defaultTargetUtilization: 0.7,
+        healthCheckIntervalMs: 30000,
+        scaleUpThreshold: 0.8,
+        scaleDownThreshold: 0.3,
+        scalingCooldownSeconds: 60,
+      },
+      k8sClient,
+    );
     await poolManager.initialize();
 
     for (const fn of functions) {
@@ -144,8 +153,17 @@ program
   .description('Invoke a function directly')
   .requiredOption('-f, --function <name>', 'Function name to invoke')
   .option('-a, --args <json>', 'Function arguments as JSON', '{}')
-  .option('-t, --timeout <number>', 'Invocation timeout in milliseconds', (v) => parseInt(v, 10), 30000)
-  .option('-c, --config-dir <dir>', 'Directory containing function definitions', './config/functions')
+  .option(
+    '-t, --timeout <number>',
+    'Invocation timeout in milliseconds',
+    (v) => parseInt(v, 10),
+    30000,
+  )
+  .option(
+    '-c, --config-dir <dir>',
+    'Directory containing function definitions',
+    './config/functions',
+  )
   .action(async (options) => {
     let parsedArgs: Record<string, unknown>;
     try {
@@ -167,15 +185,18 @@ program
     });
     await k8sClient.initialize();
 
-    const poolManager = new PoolManager({
-      defaultMinSize: 2,
-      defaultMaxSize: 10,
-      defaultTargetUtilization: 0.7,
-      healthCheckIntervalMs: 30000,
-      scaleUpThreshold: 0.8,
-      scaleDownThreshold: 0.3,
-      scalingCooldownSeconds: 60,
-    }, k8sClient);
+    const poolManager = new PoolManager(
+      {
+        defaultMinSize: 2,
+        defaultMaxSize: 10,
+        defaultTargetUtilization: 0.7,
+        healthCheckIntervalMs: 30000,
+        scaleUpThreshold: 0.8,
+        scaleDownThreshold: 0.3,
+        scalingCooldownSeconds: 60,
+      },
+      k8sClient,
+    );
     await poolManager.initialize();
 
     const functionDef = registry.getFunction(options.function);
@@ -204,7 +225,11 @@ program
 program
   .command('list')
   .description('List all registered functions')
-  .option('-c, --config-dir <dir>', 'Directory containing function definitions', './config/functions')
+  .option(
+    '-c, --config-dir <dir>',
+    'Directory containing function definitions',
+    './config/functions',
+  )
   .action(async (options) => {
     const registry = new FunctionRegistry({
       configDir: options.configDir,
@@ -234,7 +259,11 @@ program
 program
   .command('validate')
   .description('Validate function configuration files')
-  .option('-c, --config-dir <dir>', 'Directory containing function definitions', './config/functions')
+  .option(
+    '-c, --config-dir <dir>',
+    'Directory containing function definitions',
+    './config/functions',
+  )
   .action(async (options) => {
     const configDir = options.configDir;
 

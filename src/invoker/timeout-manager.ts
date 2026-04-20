@@ -208,7 +208,10 @@ export class TimeoutManager {
     }, newTimeout);
     invocation.timeoutMs = elapsed + newTimeout;
 
-    logger.debug({ requestId, newTimeoutMs: newTimeout, remainingMs: remaining }, 'Extended invocation timeout');
+    logger.debug(
+      { requestId, newTimeoutMs: newTimeout, remainingMs: remaining },
+      'Extended invocation timeout',
+    );
 
     return true;
   }

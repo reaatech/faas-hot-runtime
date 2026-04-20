@@ -47,7 +47,7 @@ export class CostTracker {
     const memoryMs = this.parseMemory(params.memory) * params.durationMs;
 
     const compute = cpuMs * this.config.cpuCostPerMs + memoryMs * this.config.memoryCostPerMs;
-    const network = (params.networkBytes ?? 0) / (1024 * 1024) * this.config.networkCostPerMB;
+    const network = ((params.networkBytes ?? 0) / (1024 * 1024)) * this.config.networkCostPerMB;
     const queue = params.isQueueTrigger ? this.config.queueCostPerRequest : 0;
 
     return { compute, network, queue };

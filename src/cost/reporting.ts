@@ -97,10 +97,19 @@ export class CostReporting {
   }
 
   private aggregateByFunction(records: CostRecord[]): FunctionCostBreakdown[] {
-    const byFunc = new Map<string, { cost: number; count: number; compute: number; network: number; queue: number }>();
+    const byFunc = new Map<
+      string,
+      { cost: number; count: number; compute: number; network: number; queue: number }
+    >();
 
     for (const record of records) {
-      const existing = byFunc.get(record.function) || { cost: 0, count: 0, compute: 0, network: 0, queue: 0 };
+      const existing = byFunc.get(record.function) || {
+        cost: 0,
+        count: 0,
+        compute: 0,
+        network: 0,
+        queue: 0,
+      };
       existing.cost += record.cost_usd;
       existing.count += 1;
       existing.compute += record.breakdown.compute;
@@ -150,7 +159,11 @@ export class CostReporting {
       .sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  private aggregateByComponent(records: CostRecord[]): { compute: number; network: number; queue: number } {
+  private aggregateByComponent(records: CostRecord[]): {
+    compute: number;
+    network: number;
+    queue: number;
+  } {
     let compute = 0;
     let network = 0;
     let queue = 0;
@@ -225,7 +238,11 @@ export class CostReporting {
 
   exportReport(format: ExportFormat, startDate?: Date, endDate?: Date): string {
     const timestamps = this.records.map((record) => record.timestamp.getTime());
-    const start = startDate || (timestamps.length > 0 ? new Date(Math.min(...timestamps)) : new Date(Date.now() - 24 * 60 * 60 * 1000));
+    const start =
+      startDate ||
+      (timestamps.length > 0
+        ? new Date(Math.min(...timestamps))
+        : new Date(Date.now() - 24 * 60 * 60 * 1000));
     const end = endDate || (timestamps.length > 0 ? new Date(Math.max(...timestamps)) : new Date());
 
     const report = this.generateReport(start, end);
@@ -264,7 +281,9 @@ export class CostReporting {
       for (const [func, cost] of Object.entries(day.byFunction)) {
         const escapedFunc = func.startsWith('=') ? `"\t${func}"` : `"${func}"`;
         const breakdown = funcBreakdowns.get(func) ?? { compute: 0, network: 0, queue: 0 };
-        lines.push(`${day.date},${escapedFunc},${cost.toFixed(6)},${day.invocationCount},${(cost / day.invocationCount).toFixed(6)},${breakdown.compute.toFixed(6)},${breakdown.network.toFixed(6)},${breakdown.queue.toFixed(6)}`);
+        lines.push(
+          `${day.date},${escapedFunc},${cost.toFixed(6)},${day.invocationCount},${(cost / day.invocationCount).toFixed(6)},${breakdown.compute.toFixed(6)},${breakdown.network.toFixed(6)},${breakdown.queue.toFixed(6)}`,
+        );
       }
     }
 
@@ -295,7 +314,12 @@ export class CostReporting {
     return lines.join('\n');
   }
 
-  comparePeriods(currentStart: Date, currentEnd: Date, previousStart: Date, previousEnd: Date): {
+  comparePeriods(
+    currentStart: Date,
+    currentEnd: Date,
+    previousStart: Date,
+    previousEnd: Date,
+  ): {
     currentTotal: number;
     previousTotal: number;
     changePercent: number;
@@ -304,15 +328,17 @@ export class CostReporting {
     const current = this.generateReport(currentStart, currentEnd);
     const previous = this.generateReport(previousStart, previousEnd);
 
-    const changePercent = previous.totalCost > 0
-      ? ((current.totalCost - previous.totalCost) / previous.totalCost) * 100
-      : 0;
+    const changePercent =
+      previous.totalCost > 0
+        ? ((current.totalCost - previous.totalCost) / previous.totalCost) * 100
+        : 0;
 
     return {
       currentTotal: current.totalCost,
       previousTotal: previous.totalCost,
       changePercent,
-      changeDirection: changePercent > 1 ? 'increased' : changePercent < -1 ? 'decreased' : 'unchanged',
+      changeDirection:
+        changePercent > 1 ? 'increased' : changePercent < -1 ? 'decreased' : 'unchanged',
     };
   }
 

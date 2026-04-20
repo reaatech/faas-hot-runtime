@@ -110,7 +110,10 @@ describe('FunctionRegistry', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(fs.promises.readFile).mockImplementation(async (path: any) => {
         if (path.includes('func2')) {
-          return VALID_YAML.replace('name: test-func', 'name: test-func-2').replace('tool_name: test_func', 'tool_name: test_func_2');
+          return VALID_YAML.replace('name: test-func', 'name: test-func-2').replace(
+            'tool_name: test_func',
+            'tool_name: test_func_2',
+          );
         }
         return VALID_YAML;
       });
@@ -240,7 +243,10 @@ describe('FunctionRegistry', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(fs.promises.readFile).mockImplementation(async (path: any) => {
         if (path.includes('func2')) {
-          return VALID_YAML.replace('name: test-func', 'name: test-func-2').replace('tool_name: test_func', 'tool_name: test_func_2');
+          return VALID_YAML.replace('name: test-func', 'name: test-func-2').replace(
+            'tool_name: test_func',
+            'tool_name: test_func_2',
+          );
         }
         return VALID_YAML;
       });
@@ -281,7 +287,9 @@ describe('FunctionRegistry', () => {
       await registry.initialize();
 
       // Simulate file change to create debounce timer
-      const changeHandler = mockWatcher.on.mock.calls.find((c: unknown[]) => c[0] === 'change')?.[1];
+      const changeHandler = mockWatcher.on.mock.calls.find(
+        (c: unknown[]) => c[0] === 'change',
+      )?.[1];
       if (changeHandler) {
         changeHandler('./config/functions/test.yaml');
       }
@@ -307,7 +315,9 @@ describe('FunctionRegistry', () => {
       await registry.initialize();
 
       // Get the change handler
-      const changeHandler = mockWatcher.on.mock.calls.find((c: unknown[]) => c[0] === 'change')?.[1];
+      const changeHandler = mockWatcher.on.mock.calls.find(
+        (c: unknown[]) => c[0] === 'change',
+      )?.[1];
       expect(changeHandler).toBeDefined();
 
       await registry.stop();
@@ -335,7 +345,9 @@ describe('FunctionRegistry', () => {
       });
       await registry.initialize();
 
-      const unlinkHandler = mockWatcher.on.mock.calls.find((c: unknown[]) => c[0] === 'unlink')?.[1];
+      const unlinkHandler = mockWatcher.on.mock.calls.find(
+        (c: unknown[]) => c[0] === 'unlink',
+      )?.[1];
       expect(unlinkHandler).toBeDefined();
 
       await registry.stop();
@@ -349,7 +361,9 @@ describe('FunctionRegistry', () => {
       });
       await registry.initialize();
 
-      const changeHandler = mockWatcher.on.mock.calls.find((c: unknown[]) => c[0] === 'change')?.[1];
+      const changeHandler = mockWatcher.on.mock.calls.find(
+        (c: unknown[]) => c[0] === 'change',
+      )?.[1];
       if (changeHandler) {
         changeHandler('./config/functions/test.txt'); // Not yaml
       }
@@ -388,7 +402,9 @@ describe('FunctionRegistry', () => {
       });
 
       // Should not throw
-      await expect(registry.initialize()).rejects.toThrow('Function config directory does not exist or is not readable');
+      await expect(registry.initialize()).rejects.toThrow(
+        'Function config directory does not exist or is not readable',
+      );
     });
 
     it('should skip duplicate function names', async () => {

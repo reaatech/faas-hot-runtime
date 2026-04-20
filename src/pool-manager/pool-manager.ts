@@ -92,7 +92,11 @@ export class PoolManager {
         podStates.push(podHealth);
       } catch (error) {
         logger.error(
-          { pod: podId, function: functionDef.name, error: error instanceof Error ? error.message : error },
+          {
+            pod: podId,
+            function: functionDef.name,
+            error: error instanceof Error ? error.message : error,
+          },
           'Failed to create pod',
         );
       }
@@ -147,8 +151,8 @@ export class PoolManager {
         throw new Error(`No pool found for function: ${functionName}`);
       }
 
-      const availablePods = poolState.pod_states.filter(
-        (p) => this.podLifecycle.isPodReadyForInvocation(p),
+      const availablePods = poolState.pod_states.filter((p) =>
+        this.podLifecycle.isPodReadyForInvocation(p),
       );
 
       if (availablePods.length === 0) {
@@ -162,13 +166,13 @@ export class PoolManager {
             }
           }
           poolState.total_pods = poolState.pod_states.length;
-          poolState.available_pods = poolState.pod_states.filter(
-            (p) => this.podLifecycle.isPodReadyForInvocation(p),
+          poolState.available_pods = poolState.pod_states.filter((p) =>
+            this.podLifecycle.isPodReadyForInvocation(p),
           ).length;
         }
 
-        const newAvailablePods = poolState.pod_states.filter(
-          (p) => this.podLifecycle.isPodReadyForInvocation(p),
+        const newAvailablePods = poolState.pod_states.filter((p) =>
+          this.podLifecycle.isPodReadyForInvocation(p),
         );
 
         if (newAvailablePods.length === 0) {
@@ -179,7 +183,8 @@ export class PoolManager {
         this.podLifecycle.transitionToActive(selectedPod);
         poolState.active_pods += 1;
         poolState.available_pods -= 1;
-        poolState.utilization = poolState.total_pods > 0 ? poolState.active_pods / poolState.total_pods : 0;
+        poolState.utilization =
+          poolState.total_pods > 0 ? poolState.active_pods / poolState.total_pods : 0;
 
         return selectedPod.pod_id;
       }
@@ -188,7 +193,8 @@ export class PoolManager {
       this.podLifecycle.transitionToActive(selectedPod);
       poolState.active_pods += 1;
       poolState.available_pods -= 1;
-      poolState.utilization = poolState.total_pods > 0 ? poolState.active_pods / poolState.total_pods : 0;
+      poolState.utilization =
+        poolState.total_pods > 0 ? poolState.active_pods / poolState.total_pods : 0;
 
       logger.debug(
         { function: functionName, pod_id: selectedPod.pod_id },
@@ -221,7 +227,8 @@ export class PoolManager {
         poolState.cooling_pods += 1;
       }
 
-      poolState.utilization = poolState.total_pods > 0 ? poolState.active_pods / poolState.total_pods : 0;
+      poolState.utilization =
+        poolState.total_pods > 0 ? poolState.active_pods / poolState.total_pods : 0;
 
       const decision = this.scalingController.makeScalingDecision(poolState);
       if (decision.action === 'scale_down') {
@@ -265,8 +272,8 @@ export class PoolManager {
       }
     }
     poolState.total_pods = poolState.pod_states.length;
-    poolState.available_pods = poolState.pod_states.filter(
-      (p) => this.podLifecycle.isPodReadyForInvocation(p),
+    poolState.available_pods = poolState.pod_states.filter((p) =>
+      this.podLifecycle.isPodReadyForInvocation(p),
     ).length;
   }
 
@@ -311,10 +318,7 @@ export class PoolManager {
           pod.last_health_check = new Date();
 
           if (!result.healthy) {
-            logger.warn(
-              { pod: podId, function: poolState.function },
-              'Pod health check failed',
-            );
+            logger.warn({ pod: podId, function: poolState.function }, 'Pod health check failed');
           }
         }
       }

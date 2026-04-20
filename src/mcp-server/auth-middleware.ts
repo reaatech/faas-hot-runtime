@@ -113,10 +113,7 @@ export class AuthMiddleware {
     const retryAfter = Math.ceil(1000 / refillRate); // Time to get 1 token
     state.blockedUntil = now + retryAfter;
 
-    logger.warn(
-      { client_id: clientId, retry_after: retryAfter },
-      'Rate limit exceeded',
-    );
+    logger.warn({ client_id: clientId, retry_after: retryAfter }, 'Rate limit exceeded');
 
     return { allowed: false, retryAfter };
   }
@@ -243,7 +240,10 @@ export class AuthMiddleware {
   /**
    * Extract client ID from request, respecting proxy settings
    */
-  private getClientId(req: { ip?: string; headers?: Record<string, string | string[] | undefined> }): string {
+  private getClientId(req: {
+    ip?: string;
+    headers?: Record<string, string | string[] | undefined>;
+  }): string {
     if (this.useProxyTrust && this.trustedProxies.length > 0) {
       const forwardedFor = req.headers?.['x-forwarded-for'];
       if (forwardedFor) {

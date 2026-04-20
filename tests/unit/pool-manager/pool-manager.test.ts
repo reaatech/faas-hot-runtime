@@ -18,7 +18,9 @@ const createMockK8sClient = () => ({
     memory: { used: 0, limit: 4096 },
     pods: { used: 0, limit: 100 },
   }),
-  getClusterInfo: vi.fn().mockResolvedValue({ version: 'v1.0.0', platform: 'kubernetes', nodeCount: 1 }),
+  getClusterInfo: vi
+    .fn()
+    .mockResolvedValue({ version: 'v1.0.0', platform: 'kubernetes', nodeCount: 1 }),
   close: vi.fn().mockResolvedValue(undefined),
 });
 
@@ -51,7 +53,11 @@ describe('PoolManager', () => {
         properties: {},
       },
     },
-    cost: { budget_daily: 10, cost_per_invocation_estimate: 0.0001, alert_thresholds: [0.5, 0.75, 0.9] },
+    cost: {
+      budget_daily: 10,
+      cost_per_invocation_estimate: 0.0001,
+      alert_thresholds: [0.5, 0.75, 0.9],
+    },
     observability: { tracing_enabled: true, metrics_enabled: true, log_level: 'info' },
   };
 

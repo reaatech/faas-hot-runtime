@@ -38,10 +38,7 @@ export class ToolRegistry {
     this.tools.set(toolName, tool);
     this.functionNames.set(toolName, definition.name);
 
-    logger.info(
-      { function: definition.name, tool_name: toolName },
-      'Tool registered in registry',
-    );
+    logger.info({ function: definition.name, tool_name: toolName }, 'Tool registered in registry');
   }
 
   /**
@@ -109,7 +106,11 @@ export class ToolRegistry {
   /**
    * Convert our MCP input schema to MCP SDK schema format
    */
-  private convertToMCPSchema(schema: MCPInputSchema): { type: string; properties: Record<string, object>; required: string[] } {
+  private convertToMCPSchema(schema: MCPInputSchema): {
+    type: string;
+    properties: Record<string, object>;
+    required: string[];
+  } {
     return {
       type: schema.type ?? 'object',
       properties: this.convertProperties(schema.properties),
@@ -120,9 +121,7 @@ export class ToolRegistry {
   /**
    * Convert property schemas recursively
    */
-  private convertProperties(
-    properties: Record<string, MCPPropertySchema>,
-  ): Record<string, object> {
+  private convertProperties(properties: Record<string, MCPPropertySchema>): Record<string, object> {
     const result: Record<string, object> = {};
 
     for (const [key, prop] of Object.entries(properties)) {
@@ -177,9 +176,7 @@ export class ToolRegistry {
   validateToolExists(toolName: string): void {
     if (!this.tools.has(toolName)) {
       const availableTools = Array.from(this.tools.keys()).join(', ');
-      throw new Error(
-        `Tool "${toolName}" not found. Available tools: ${availableTools || 'none'}`,
-      );
+      throw new Error(`Tool "${toolName}" not found. Available tools: ${availableTools || 'none'}`);
     }
   }
 

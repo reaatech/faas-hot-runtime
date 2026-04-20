@@ -111,9 +111,17 @@ export const ObservabilityConfigSchema = z.object({
 export const FunctionDefinitionSchema = z.object({
   name: z
     .string()
-    .regex(/^[a-z][a-z0-9-]*$/, 'Function name must be lowercase with hyphens, starting with a letter'),
+    .regex(
+      /^[a-z][a-z0-9-]*$/,
+      'Function name must be lowercase with hyphens, starting with a letter',
+    ),
   description: z.string().min(1, 'Description is required'),
-  version: z.string().regex(/^\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?(\+[a-zA-Z0-9.]+)?$/, 'Version must be semantic version (e.g., 1.0.0, 1.0.0-beta.1)'),
+  version: z
+    .string()
+    .regex(
+      /^\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?(\+[a-zA-Z0-9.]+)?$/,
+      'Version must be semantic version (e.g., 1.0.0, 1.0.0-beta.1)',
+    ),
   container: ContainerConfigSchema,
   pool: PoolConfigSchema,
   triggers: z.array(TriggerConfigSchema).min(1, 'At least one trigger is required'),
