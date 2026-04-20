@@ -1,4 +1,4 @@
-import { PubSub } from '@google-cloud/pubsub';
+import { PubSub, Duration } from '@google-cloud/pubsub';
 import { logger } from '../observability/logger.js';
 import type { InvocationRequest, InvocationResult, FunctionDefinition } from '../types/index.js';
 
@@ -33,7 +33,7 @@ export class PubSubTrigger {
     );
 
     this.subscription = this.pubsub.subscription(this.config.subscriptionName, {
-      ackDeadline: this.config.ackDeadlineSeconds,
+      maxAckDeadline: Duration.from({ seconds: this.config.ackDeadlineSeconds }),
       flowControl: {
         maxMessages: this.config.maxMessages,
       },
