@@ -35,18 +35,18 @@ export function initMetrics(config: MetricsConfig): void {
     return;
   }
 
-  metricProvider = new MeterProvider();
-
-  if (config.otlpEndpoint) {
-    metricProvider.addMetricReader(
-      new PeriodicExportingMetricReader({
-        exporter: new OTLPMetricExporter({
-          url: config.otlpEndpoint,
-        }),
-        exportIntervalMillis: config.exportIntervalMs ?? 60000,
-      }),
-    );
-  }
+  metricProvider = new MeterProvider({
+    readers: config.otlpEndpoint
+      ? [
+          new PeriodicExportingMetricReader({
+            exporter: new OTLPMetricExporter({
+              url: config.otlpEndpoint,
+            }),
+            exportIntervalMillis: config.exportIntervalMs ?? 60000,
+          }),
+        ]
+      : [],
+  });
 
   metrics.setGlobalMeterProvider(metricProvider);
 

@@ -28,15 +28,15 @@ export function initTracing(config: TracingConfig): void {
     return;
   }
 
-  tracerProvider = new NodeTracerProvider();
-
-  tracerProvider.addSpanProcessor(
-    new BatchSpanProcessor(
-      new OTLPTraceExporter({
-        url: config.otlpEndpoint,
-      }),
-    ),
-  );
+  tracerProvider = new NodeTracerProvider({
+    spanProcessors: [
+      new BatchSpanProcessor(
+        new OTLPTraceExporter({
+          url: config.otlpEndpoint,
+        }),
+      ),
+    ],
+  });
 
   tracerProvider.register();
 
