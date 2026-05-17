@@ -56,7 +56,7 @@
     "@opentelemetry/resources": "^2.7.0",
     "@opentelemetry/sdk-metrics": "^2.7.0",
     "@opentelemetry/sdk-node": "^0.215.0",
-    "@opentelemetry/sdk-trace-node": "^2.7.0",
+    "@opentelemetry/sdk-trace-node": "^2.7.1",
     "@opentelemetry/semantic-conventions": "^1.40.0",
     "chokidar": "^3.6.0",
     "commander": "^12.1.0",
