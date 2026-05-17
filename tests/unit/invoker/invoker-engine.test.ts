@@ -268,7 +268,7 @@ describe('InvokerEngine', () => {
 
     const mockHttpRequest = ({
       body = '',
-      delayMs = 0,
+      delayMs = 1,
       error,
       statusCode = 200,
       timeout = false,
