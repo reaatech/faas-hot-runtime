@@ -24,7 +24,7 @@ export class SchemaValidator {
     // Validate against Zod schema
     const parseResult = FunctionDefinitionSchema.safeParse(data);
     if (!parseResult.success) {
-      parseResult.error.errors.forEach((err) => {
+      parseResult.error.issues.forEach((err) => {
         errors.push(`${err.path.join('.')}: ${err.message}`);
       });
       return { valid: false, errors, warnings };
@@ -129,7 +129,7 @@ export class SchemaValidator {
   /**
    * Validate input against MCP tool schema
    */
-  validateInput(schema: z.ZodType, input: unknown): z.SafeParseReturnType<unknown, unknown> {
+  validateInput(schema: z.ZodType, input: unknown): z.ZodSafeParseResult<unknown> {
     return schema.safeParse(input);
   }
 }
