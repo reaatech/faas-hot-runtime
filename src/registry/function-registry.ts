@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import YAML from 'yaml';
-import chokidar from 'chokidar';
+import chokidar, { type FSWatcher } from 'chokidar';
 import { logger } from '../observability/logger.js';
 import type { FunctionDefinition } from '../types/index.js';
 import { FunctionDefinitionSchema } from '../types/index.js';
@@ -23,7 +23,7 @@ export class FunctionRegistry {
   private config: FunctionRegistryConfig;
   private functions: FunctionMap = new Map();
   private mcpToolNames: Map<string, string> = new Map();
-  private watcher?: chokidar.FSWatcher;
+  private watcher?: FSWatcher;
   private fileToFunction: Map<string, string> = new Map();
   private addedCallbacks: Array<(event: FunctionChangeEvent) => Promise<void> | void> = [];
   private updatedCallbacks: Array<(event: FunctionChangeEvent) => Promise<void> | void> = [];
