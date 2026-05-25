@@ -41,7 +41,7 @@ const MCPPropertySchema: any = z.lazy(() =>
     default: z.unknown().optional(),
     enum: z.array(z.string()).optional(),
     format: z.string().optional(),
-    properties: z.record(MCPPropertySchema).optional(),
+    properties: z.record(z.string(), MCPPropertySchema).optional(),
     required: z.array(z.string()).optional(),
     items: MCPPropertySchema.optional(),
   }),
@@ -50,7 +50,7 @@ const MCPPropertySchema: any = z.lazy(() =>
 // MCP input schema
 export const MCPInputSchemaSchema = z.object({
   type: z.literal('object'),
-  properties: z.record(MCPPropertySchema),
+  properties: z.record(z.string(), MCPPropertySchema),
   required: z.array(z.string()).optional(),
 });
 
@@ -133,7 +133,7 @@ export const FunctionDefinitionSchema = z.object({
 // Invocation request schema
 export const InvocationRequestSchema = z.object({
   function: z.string().min(1, 'Function name is required'),
-  arguments: z.record(z.unknown()),
+  arguments: z.record(z.string(), z.unknown()),
   request_id: z.string().min(1, 'Request ID is required'),
   client_id: z.string().optional(),
   timeout_ms: z.number().int().min(100).max(300000).optional(),
