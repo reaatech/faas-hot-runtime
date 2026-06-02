@@ -81,7 +81,7 @@ export class K8sClient {
         { error: error instanceof Error ? error.message : error },
         'Failed to connect to Kubernetes cluster',
       );
-      throw new Error('Kubernetes cluster connection failed');
+      throw new Error('Kubernetes cluster connection failed', { cause: error });
     }
 
     logger.info('Kubernetes client initialized');
